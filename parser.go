@@ -4,27 +4,32 @@ import (
 	"strings"
 	"unicode"
 	"strconv"
+	"errors"
 	"fmt"
 )
 
 // parseNetworkMap extracts the station and connections data from the network map, creating a Station struct for each station and a connections map linking each connected station to each other
-func parseNetworkMap(text string) {
+func parseNetworkMap(text string) error {
 	lines := strings.Split(text, "\n")
 
 	var parsingSection string
 	var stationsBuffer []string // contains lines within station section to be parsed
 	var connectionsBuffer []string // contains lines within connections section to be parsed
-
-	for _, line := range lines {
+	var stationLineNum int // the line number in the text at which the "stations:" section starts
+	var connectionsLineNum int // the line number in the text at which the "connections:" section starts
+	
+	for i, line := range lines {
 		line = strings.TrimSpace(line)
 
 		if line == "stations:" {
 			parsingSection = "stations"
+			stationLineNum = i + 1
 			continue
 		}
 
 		if line == "connections:" {
 			parsingSection = "connections"
+			connectionsLineNum = i + 1
 			continue
 		}
 
@@ -37,8 +42,20 @@ func parseNetworkMap(text string) {
 		}
 	}
 
-	parseStations(stationsBuffer)
-	parseConnections(connectionsBuffer)
+	if stationLineNum == 0 {
+		return errors.New("Error: Missing \"stations:\" section")
+	}
+
+	if connectionsLineNum == 0 {
+		return errors.New("Error: Missing \"connections:\" section")
+	}
+
+	_, err1 := parseStations(stationsBuffer, stationLineNum)
+	_, err2 := parseConnections(connectionsBuffer, connectionsLineNum)
+	fmt.Println(err1)
+	fmt.Println(err2)
+
+	return errors.Join(err1, err2)
 }
 
 type Station struct {
@@ -48,10 +65,13 @@ type Station struct {
 }
 
 // parseStations parses the stations section of the network map and returns a []Station
-func parseStations(lines []string) []Station {
+func parseStations(lines []string, lineNum int) ([]Station, error) {
 	var stations []Station
+	var errs []error
 
-	for _, line := range lines {
+	for i, line := range lines {
+		var lineHasError bool
+
 		line,_,_ = strings.Cut(line, "#") // Remove comments
 
 		if strings.TrimSpace(line) == "" {
@@ -61,38 +81,41 @@ func parseStations(lines []string) []Station {
 		parts := trimSpaceSlice(strings.Split(line, ","))
 
 		if len(parts) != 3 { // Skip malformed station data
-			fmt.Printf("Invalid station line: %v\n", line)
+			errs = append(errs, fmt.Errorf("Malformed station format on line #%d: %s\n", lineNum + i + 1, line))
 			continue
 		}
 
 		name, x, y := parts[0], parts[1], parts[2]
 
 		if !validateStationName(name) {
-			fmt.Printf("Invalid station name: %v\n", name)
-			continue
+			errs = append(errs, fmt.Errorf("Invalid station name in line #%d: %v\n", lineNum + i + 1, name))
+			lineHasError = true
 		}
 
 		xInt, isXValid := validateCoordinate(x)
 		yInt, isYValid := validateCoordinate(y)
 	
 		if !isXValid || !isYValid {
-			fmt.Printf("Invalid coordinates: %v, %v\n", x, y)
+			errs = append(errs, fmt.Errorf("Invalid coordinates at station %s in line #%d: %v, %v\n", name, lineNum + i + 1, x, y))
 			continue
 		}
 
-		stations = append(stations, Station{name, xInt, yInt})
+		if !lineHasError {
+			stations = append(stations, Station{name, xInt, yInt})
+		}
 	}
 
 	fmt.Printf("Valid stations:\n%v\n", stations)
-	return stations
+	return stations, errors.Join(errs...)
 }
 
 // parseConnections parses the connections section of the network map and creates a connections map linking all connected stations
-func parseConnections(lines []string) map[string]map[string]struct{} {
+func parseConnections(lines []string, lineNum int) (map[string]map[string]struct{}, error) {
 	// The connections map is a map where each station (name) is a key and the value is a set of all its connecting stations
 	connectionsMap := make(map[string]map[string]struct{})
+	var errs []error
 
-	for _, line := range lines {
+	for i, line := range lines {
 		line,_,_ := strings.Cut(line, "#") // Remove comments
 
 		if strings.TrimSpace(line) == "" {
@@ -102,14 +125,14 @@ func parseConnections(lines []string) map[string]map[string]struct{} {
 		parts := trimSpaceSlice(strings.Split(line, "-"))
 
 		if len(parts) != 2 {
-			fmt.Printf("Invalid connection line: %v\n", line)
+			errs = append(errs, fmt.Errorf("Malformed connection format in line #%d: %s\n", lineNum + i + 1, line))
 			continue
 		}
 
 		start, end := parts[0], parts[1]
 
 		if !validateStationName(start) || !validateStationName(end) {
-			fmt.Printf("Malformed station names: %v\n", line)
+			errs = append(errs, fmt.Errorf("Malformed station names in line #%d: %s\n", lineNum + i + 1, line))
 			continue
 		}
 
@@ -124,8 +147,8 @@ func parseConnections(lines []string) map[string]map[string]struct{} {
 		connectionsMap[end][start] = struct{}{}
 	}
 
-	fmt.Printf("\nConnections map:\n%v", connectionsMap)
-	return connectionsMap
+	fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
+	return connectionsMap, errors.Join(errs...)
 }
 
 // trimSpaceSlice applies strings.TrimSpace on each string in []string
@@ -173,7 +196,7 @@ func main() {
 		victoria,6,7
 
 		# north stations
-		euston,11,23
+		euston,11,-23
 		st_pancras,5,15 # international
 		inValidStation, 1, 2
 
@@ -181,7 +204,10 @@ func main() {
 		waterloo -victoria
 		waterloo- euston  
 		st_pancras-euston
-		victoria-st_pancras`
+		victoria-st_pancras
+		toronto--waterloo
+		toronto-WATERLOO
+		`
 
 	parseNetworkMap(text)
 }
