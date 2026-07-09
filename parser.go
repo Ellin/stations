@@ -136,6 +136,11 @@ func parseConnections(lines []string, lineNum int) (map[string]map[string]struct
 			continue
 		}
 
+		if start == end {
+			errs = append(errs, fmt.Errorf("Error on line #%d. Start and end connections are the same: %s", lineNum + i + 1, line))
+			continue
+		}
+
 		// Add each start/end station as a connection to each other in the connectionsMap
 		if connectionsMap[start] == nil {
 			connectionsMap[start] = make(map[string]struct{})
@@ -207,6 +212,7 @@ func main() {
 		victoria-st_pancras
 		toronto--waterloo
 		toronto-WATERLOO
+		new_york - new_york
 		`
 
 	parseNetworkMap(text)
