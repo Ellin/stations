@@ -1,0 +1,16 @@
+stations:
+london,5,5
+reading,2,5
+oxford,2,2
+cambridge,8,2
+watford,5,2
+brighton,5,8
+
+connections:
+london-reading
+london-cambridge
+london-watford
+london-brighton
+
+reading-oxford
+watford-oxford
