@@ -154,13 +154,21 @@ func parseConnections(lines []string, lineNum int) (map[StationName]map[StationN
 			continue
 		}
 
-		// Add each start/end station as a connection to each other in the connectionsMap
 		if connectionsMap[start] == nil {
 			connectionsMap[start] = make(map[StationName]struct{})
 		}
 		if connectionsMap[end] == nil {
 			connectionsMap[end] = make(map[StationName]struct{})
 		}
+
+		// Check duplicate connections
+		_, ok := connectionsMap[start][end]
+		if ok {
+			errs = append(errs, fmt.Errorf("Error on line #%d. Duplicate connections between %s and %s", lineNum + i + 1, start, end))
+			continue		
+		}
+
+		// Add each start/end station as a connection to each other in the connectionsMap
 		connectionsMap[start][end] = struct{}{}
 		connectionsMap[end][start] = struct{}{}
 	}
@@ -168,7 +176,6 @@ func parseConnections(lines []string, lineNum int) (map[StationName]map[StationN
 	fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
 	return connectionsMap, errors.Join(errs...)
 }
-
 
 // trimSpaceSlice applies strings.TrimSpace on each string in []string
 func trimSpaceSlice(s []string) []string {
@@ -222,6 +229,8 @@ func main() {
 
 		connections:
 		waterloo -victoria
+		victoria-waterloo #duplicate test
+		waterloo-victoria#duplicate test
 		waterloo- euston  
 		st_pancras-euston
 		victoria-st_pancras
