@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -46,6 +47,21 @@ func validateMapFile(file string) error {
 	ex := filepath.Ext(file)
 	if ex != ".map" {
 		return fmt.Errorf("Invalid File Extension '%s', Allowed extentions = [.map].\n", ex)
+	}
+	return nil
+}
+
+func ValidateStartAndEndStation(network *NetworkData, startStation, endStation string) error {
+	if startStation == endStation {
+		return errors.New("Error: Start Station And End Station Cannot Be The Same.")
+	}
+	_, startFound := network.StationMap[startStation]
+	_, endFound := network.StationMap[endStation]
+	if !startFound {
+		return errors.New("Error: Start Station Not Found In The Map.")
+	}
+	if !endFound {
+		return errors.New("Error: End Station Not Found In The Map.")
 	}
 	return nil
 }
