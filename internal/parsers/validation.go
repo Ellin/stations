@@ -1,0 +1,51 @@
+package parsers
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"unicode"
+)
+
+// validateStationName returns true if the station name meets the following criteria:
+// Comprised of lower-case letters, numbers and underscores (_) only. No special characters or other punctuation are allowed.
+func validateStationName(name string) bool {
+	if name == "" {
+		return false
+	}
+
+	for _, char := range name {
+		if !(unicode.IsLower(char) || unicode.IsNumber(char) || char == '_') {
+			return false
+		}
+	}
+
+	return true
+}
+
+// validateCoordinate returns the coordinate as an int and true if valid
+// Coordinate must be positive integer
+func validateCoordinate(c string) (int, bool) {
+	num, err := strconv.Atoi(c)
+
+	if err != nil || num < 1 {
+		return -1, false
+	}
+
+	return num, true
+}
+
+// validateMapFile returns error if file doesn't exist or file extention is not map else it returns nil
+// it takes file name type string
+func validateMapFile(file string) error {
+	_, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("File %s Does Not Exist.\n", file)
+	}
+	ex := filepath.Ext(file)
+	if ex != ".map" {
+		return fmt.Errorf("Invalid File Extension '%s', Allowed extentions = [.map].\n", ex)
+	}
+	return nil
+}
