@@ -16,8 +16,10 @@ func main() {
 	// extract the text from map file using arg.MapFile where the file name is stored
 	fileText, err := ReadFile(arg.MapFile)
 	close(err)
+
 	networkData, networkErr := parsers.ParseNetworkMap(fileText)
 	close(networkErr)
+
 	StationErr := parsers.ValidateStartAndEndStation(&networkData, arg.StartStation, arg.EndStation)
 	close(StationErr)
 }

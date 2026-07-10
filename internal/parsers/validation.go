@@ -52,13 +52,16 @@ func validateMapFile(file string) error {
 }
 
 func ValidateStartAndEndStation(network *NetworkData, startStation, endStation string) error {
+	if startStation == endStation {
+		return errors.New("Error: Start Station And End Station Cannot Be The Same.")
+	}
 	_, startFound := network.StationMap[startStation]
 	_, endFound := network.StationMap[endStation]
 	if !startFound {
-		return errors.New("Start Station Not Found In The Map")
+		return errors.New("Error: Start Station Not Found In The Map.")
 	}
 	if !endFound {
-		return errors.New("End Station Not Found In The Map")
+		return errors.New("Error: End Station Not Found In The Map.")
 	}
 	return nil
 }
