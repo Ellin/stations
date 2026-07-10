@@ -12,12 +12,23 @@ import (
 // this function returns ArgsInfo struct  and error if any of the argument are not valid
 func ParseArgs() (*model.ArgsInfo, error) {
 	var argList model.ArgsInfo // this stores the argument from the cli
+	flag.Usage = func() {
+		fmt.Println("Usage: go run . [path to file containing network map] [start station] [end station] [number of trains]")
+		fmt.Println()
+		fmt.Println("Flags: ")
+		flag.PrintDefaults()
+		fmt.Println()
+		fmt.Println("Examples:")
+		fmt.Println(`  go run . network/map2.map tempere helsinki 10`)
+		fmt.Println(`  go run . network/map2.map hanko kokkola 20`)
+	}
 
 	flag.Parse()
+
 	args := flag.Args()
 
-	if len(args) < 4 {
-		return nil, errors.New("Error: Insufficient number of arguments.\n")
+	if len(args) != 4 {
+		return nil, errors.New("Error: Incorrect Lenght Of Arguments To See The Usage run: \n\n\t\t'go run . -h'\n")
 	}
 
 	TrainNumber, isValid := validateCoordinate(args[3])
