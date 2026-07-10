@@ -65,13 +65,20 @@ func parseNetworkMap(text string) (NetworkData, error) {
 	}
 
 	stationMap, err1 := parseStations(stationsBuffer, stationLineNum)
-	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum, stationMap)
-	// fmt.Println(err1)
-	// fmt.Println(err2)
+	if err1 != nil {
+		fmt.Println(err1)
+		return NetworkData{}, err1
+	}
 
+	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum, stationMap)
+	if err2 != nil {
+		fmt.Println(err2)
+		return NetworkData{}, err2
+	}
+	
 	networkData := NetworkData{stationMap, networkMap}
 
-	return networkData, errors.Join(err1, err2)
+	return networkData, nil
 }
 
 // parseStations parses the stations section of the network map and returns a station map: map[StationName]Station
@@ -122,7 +129,7 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 		if !lineHasError {
 			_, ok := stationMap[name]
 			if ok {
-				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d", name, lineNum + i + 1))
+				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum + i + 1))
 				continue				
 			}
 			stationMap[name] = Station{name, xInt, yInt}
