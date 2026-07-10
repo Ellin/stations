@@ -6,8 +6,22 @@ import (
 	"strings"
 )
 
-// parseNetworkMap extracts the station and connections data from the network map, creating a Station struct for each station and a connections map linking each connected station to each other
-func ParseNetworkMap(text string) error {
+type NetworkData struct {
+	StationMap map[StationName]Station 
+	NetworkMap map[StationName]map[StationName]struct{} // The network map links each station to a set of all connecting stations
+}
+
+type StationName = string
+
+type Station struct {
+	name string
+	x int
+	y int
+}
+
+// parseNetworkMap extracts the station and connections data from the network map
+// It returns a station map, connections map, and an error if data in the network map is malformed or invalid
+func ParseNetworkMap(text string) (NetworkData, error) {
 	lines := strings.Split(text, "\n")
 
 	var parsingSection string
@@ -41,31 +55,35 @@ func ParseNetworkMap(text string) error {
 	}
 
 	if stationLineNum == 0 {
-		return errors.New("Error: Missing \"stations:\" section")
+		return NetworkData{}, errors.New("Error: Missing \"stations:\" section")
 	}
 
 	if connectionsLineNum == 0 {
-		return errors.New("Error: Missing \"connections:\" section")
+		return NetworkData{}, errors.New("Error: Missing \"connections:\" section")
 	}
 
-	_, err1 := parseStations(stationsBuffer, stationLineNum)
-	_, err2 := parseConnections(connectionsBuffer, connectionsLineNum)
-	fmt.Println(err1)
-	fmt.Println(err2)
+	stationMap, err1 := parseStations(stationsBuffer, stationLineNum)
+	if err1 != nil {
+		fmt.Println(err1)
+		return NetworkData{}, err1
+	}
 
-	return errors.Join(err1, err2)
+	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum, stationMap)
+	if err2 != nil {
+		fmt.Println(err2)
+		return NetworkData{}, err2
+	}
+	
+	networkData := NetworkData{stationMap, networkMap}
+
+	return networkData, nil
 }
 
-type Station struct {
-	name string
-	x    int
-	y    int
-}
-
-// parseStations parses the stations section of the network map and returns a []Station
-func parseStations(lines []string, lineNum int) ([]Station, error) {
-	var stations []Station
+// parseStations parses the stations section of the network map and returns a station map: map[StationName]Station
+func parseStations(lines []string, lineNum int) (map[StationName]Station, error) {
+	stationMap := make(map[StationName]Station)
 	var errs []error
+	seenCoordinates := make(map[string]struct{})
 
 	for i, line := range lines {
 		var lineHasError bool
@@ -98,19 +116,32 @@ func parseStations(lines []string, lineNum int) ([]Station, error) {
 			continue
 		}
 
+		// Check for duplicate coordinates
+		var coordinates string = x + "," + y
+		if _, ok := seenCoordinates[coordinates]; ok {
+			errs = append(errs, fmt.Errorf("Duplicate coordinates in line #%d: %s\n", lineNum + i + 1, coordinates))
+			continue
+		}
+		seenCoordinates[coordinates] = struct{}{}
+
 		if !lineHasError {
-			stations = append(stations, Station{name, xInt, yInt})
+			_, ok := stationMap[name]
+			if ok {
+				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum + i + 1))
+				continue				
+			}
+			stationMap[name] = Station{name, xInt, yInt}
 		}
 	}
 
-	fmt.Printf("Valid stations:\n%v\n", stations)
-	return stations, errors.Join(errs...)
+	fmt.Printf("Valid stations:\n%v\n", stationMap)
+	return stationMap, errors.Join(errs...)
 }
 
 // parseConnections parses the connections section of the network map and creates a connections map linking all connected stations
-func parseConnections(lines []string, lineNum int) (map[string]map[string]struct{}, error) {
+func parseConnections(lines []string, lineNum int, stationMap map[StationName]Station) (map[StationName]map[StationName]struct{}, error) {
 	// The connections map is a map where each station (name) is a key and the value is a set of all its connecting stations
-	connectionsMap := make(map[string]map[string]struct{})
+	connectionsMap := make(map[StationName]map[StationName]struct{})
 	var errs []error
 
 	for i, line := range lines {
@@ -134,18 +165,39 @@ func parseConnections(lines []string, lineNum int) (map[string]map[string]struct
 			continue
 		}
 
+		// Check that the stations exist 
+		_, startExists := stationMap[start] 
+		_, endExists := stationMap[end] 
+		if !startExists || !endExists {
+			if !startExists {
+				errs = append(errs, fmt.Errorf("Non-existent start station in line #%d: %s\n", lineNum + i + 1, start))
+			}
+			if !endExists {
+				errs = append(errs, fmt.Errorf("Non-existent end station in line #%d: %s\n", lineNum + i + 1, end))
+			}
+			continue
+		}
+
 		if start == end {
 			errs = append(errs, fmt.Errorf("Error on line #%d. Start and end connections are the same: %s", lineNum+i+1, line))
 			continue
 		}
 
-		// Add each start/end station as a connection to each other in the connectionsMap
 		if connectionsMap[start] == nil {
-			connectionsMap[start] = make(map[string]struct{})
+			connectionsMap[start] = make(map[StationName]struct{})
 		}
 		if connectionsMap[end] == nil {
-			connectionsMap[end] = make(map[string]struct{})
+			connectionsMap[end] = make(map[StationName]struct{})
 		}
+
+		// Check duplicate connections
+		_, ok := connectionsMap[start][end]
+		if ok {
+			errs = append(errs, fmt.Errorf("Error on line #%d. Duplicate connections between %s and %s", lineNum + i + 1, start, end))
+			continue		
+		}
+
+		// Add each start/end station as a connection to each other in the connectionsMap
 		connectionsMap[start][end] = struct{}{}
 		connectionsMap[end][start] = struct{}{}
 	}
