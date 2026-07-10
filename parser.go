@@ -76,6 +76,7 @@ func parseNetworkMap(text string) (map[StationName]Station, map[StationName]map[
 func parseStations(lines []string, lineNum int) (map[StationName]Station, error) {
 	stationMap := make(map[StationName]Station)
 	var errs []error
+	seenCoordinates := make(map[string]struct{})
 
 	for i, line := range lines {
 		var lineHasError bool
@@ -107,6 +108,14 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 			errs = append(errs, fmt.Errorf("Invalid coordinates at station %s in line #%d: %v, %v\n", name, lineNum + i + 1, x, y))
 			continue
 		}
+
+		// Check for duplicate coordinates
+		var coordinates string = x + "," + y
+		if _, ok := seenCoordinates[coordinates]; ok {
+			errs = append(errs, fmt.Errorf("Duplicate coordinates in line #%d: %s\n", lineNum + i + 1, coordinates))
+			continue
+		}
+		seenCoordinates[coordinates] = struct{}{}
 
 		if !lineHasError {
 			_, ok := stationMap[name]
@@ -234,6 +243,7 @@ func main() {
 		waterloo  , 3 , 1
 		victoria,6,7
 		waterloo, 6 , 1
+		dup_coor, 3,1
 
 		# north stations
 		euston,11,23
