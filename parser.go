@@ -8,8 +8,22 @@ import (
 	"fmt"
 )
 
-// parseNetworkMap extracts the station and connections data from the network map, creating a Station struct for each station and a connections map linking each connected station to each other
-func parseNetworkMap(text string) error {
+type NetworkData struct {
+	StationMap map[StationName]Station 
+	NetworkMap map[StationName]map[StationName]struct{} // The network map links each station to a set of all connecting stations
+}
+
+type StationName = string
+
+type Station struct {
+	name string
+	x int
+	y int
+}
+
+// parseNetworkMap extracts the station and connections data from the network map
+// It returns a station map, connections map, and an error if data in the network map is malformed or invalid
+func parseNetworkMap(text string) (map[StationName]Station, map[StationName]map[StationName]struct{}, error) {
 	lines := strings.Split(text, "\n")
 
 	var parsingSection string
@@ -43,30 +57,24 @@ func parseNetworkMap(text string) error {
 	}
 
 	if stationLineNum == 0 {
-		return errors.New("Error: Missing \"stations:\" section")
+		return nil, nil, errors.New("Error: Missing \"stations:\" section")
 	}
 
 	if connectionsLineNum == 0 {
-		return errors.New("Error: Missing \"connections:\" section")
+		return nil, nil, errors.New("Error: Missing \"connections:\" section")
 	}
 
-	_, err1 := parseStations(stationsBuffer, stationLineNum)
-	_, err2 := parseConnections(connectionsBuffer, connectionsLineNum)
+	stationMap, err1 := parseStations(stationsBuffer, stationLineNum)
+	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum)
 	fmt.Println(err1)
 	fmt.Println(err2)
 
-	return errors.Join(err1, err2)
+	return stationMap, networkMap, errors.Join(err1, err2)
 }
 
-type Station struct {
-	name string
-	x int
-	y int
-}
-
-// parseStations parses the stations section of the network map and returns a []Station
-func parseStations(lines []string, lineNum int) ([]Station, error) {
-	var stations []Station
+// parseStations parses the stations section of the network map and returns a station map: map[StationName]Station
+func parseStations(lines []string, lineNum int) (map[StationName]Station, error) {
+	stationMap := make(map[StationName]Station)
 	var errs []error
 
 	for i, line := range lines {
@@ -101,18 +109,23 @@ func parseStations(lines []string, lineNum int) ([]Station, error) {
 		}
 
 		if !lineHasError {
-			stations = append(stations, Station{name, xInt, yInt})
+			_, ok := stationMap[name]
+			if ok {
+				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d", name, lineNum + i + 1))
+				continue				
+			}
+			stationMap[name] = Station{name, xInt, yInt}
 		}
 	}
 
-	fmt.Printf("Valid stations:\n%v\n", stations)
-	return stations, errors.Join(errs...)
+	fmt.Printf("Valid stations:\n%v\n", stationMap)
+	return stationMap, errors.Join(errs...)
 }
 
 // parseConnections parses the connections section of the network map and creates a connections map linking all connected stations
-func parseConnections(lines []string, lineNum int) (map[string]map[string]struct{}, error) {
+func parseConnections(lines []string, lineNum int) (map[StationName]map[StationName]struct{}, error) {
 	// The connections map is a map where each station (name) is a key and the value is a set of all its connecting stations
-	connectionsMap := make(map[string]map[string]struct{})
+	connectionsMap := make(map[StationName]map[StationName]struct{})
 	var errs []error
 
 	for i, line := range lines {
@@ -143,10 +156,10 @@ func parseConnections(lines []string, lineNum int) (map[string]map[string]struct
 
 		// Add each start/end station as a connection to each other in the connectionsMap
 		if connectionsMap[start] == nil {
-			connectionsMap[start] = make(map[string]struct{})
+			connectionsMap[start] = make(map[StationName]struct{})
 		}
 		if connectionsMap[end] == nil {
-			connectionsMap[end] = make(map[string]struct{})
+			connectionsMap[end] = make(map[StationName]struct{})
 		}
 		connectionsMap[start][end] = struct{}{}
 		connectionsMap[end][start] = struct{}{}
@@ -155,6 +168,7 @@ func parseConnections(lines []string, lineNum int) (map[string]map[string]struct
 	fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
 	return connectionsMap, errors.Join(errs...)
 }
+
 
 // trimSpaceSlice applies strings.TrimSpace on each string in []string
 func trimSpaceSlice(s []string) []string {
@@ -199,6 +213,7 @@ func main() {
 		# south stations
 		waterloo  , 3 , 1
 		victoria,6,7
+		waterloo, 6 , 1
 
 		# north stations
 		euston,11,-23
