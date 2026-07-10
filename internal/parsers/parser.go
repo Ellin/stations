@@ -1,23 +1,21 @@
-package main
+package parsers
 
 import (
-	"strings"
-	"unicode"
-	"strconv"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // parseNetworkMap extracts the station and connections data from the network map, creating a Station struct for each station and a connections map linking each connected station to each other
-func parseNetworkMap(text string) error {
+func ParseNetworkMap(text string) error {
 	lines := strings.Split(text, "\n")
 
 	var parsingSection string
-	var stationsBuffer []string // contains lines within station section to be parsed
+	var stationsBuffer []string    // contains lines within station section to be parsed
 	var connectionsBuffer []string // contains lines within connections section to be parsed
-	var stationLineNum int // the line number in the text at which the "stations:" section starts
-	var connectionsLineNum int // the line number in the text at which the "connections:" section starts
-	
+	var stationLineNum int         // the line number in the text at which the "stations:" section starts
+	var connectionsLineNum int     // the line number in the text at which the "connections:" section starts
+
 	for i, line := range lines {
 		line = strings.TrimSpace(line)
 
@@ -60,8 +58,8 @@ func parseNetworkMap(text string) error {
 
 type Station struct {
 	name string
-	x int
-	y int
+	x    int
+	y    int
 }
 
 // parseStations parses the stations section of the network map and returns a []Station
@@ -72,7 +70,7 @@ func parseStations(lines []string, lineNum int) ([]Station, error) {
 	for i, line := range lines {
 		var lineHasError bool
 
-		line,_,_ = strings.Cut(line, "#") // Remove comments
+		line, _, _ = strings.Cut(line, "#") // Remove comments
 
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -81,22 +79,22 @@ func parseStations(lines []string, lineNum int) ([]Station, error) {
 		parts := trimSpaceSlice(strings.Split(line, ","))
 
 		if len(parts) != 3 { // Skip malformed station data
-			errs = append(errs, fmt.Errorf("Malformed station format on line #%d: %s\n", lineNum + i + 1, line))
+			errs = append(errs, fmt.Errorf("Malformed station format on line #%d: %s\n", lineNum+i+1, line))
 			continue
 		}
 
 		name, x, y := parts[0], parts[1], parts[2]
 
 		if !validateStationName(name) {
-			errs = append(errs, fmt.Errorf("Invalid station name in line #%d: %v\n", lineNum + i + 1, name))
+			errs = append(errs, fmt.Errorf("Invalid station name in line #%d: %v\n", lineNum+i+1, name))
 			lineHasError = true
 		}
 
 		xInt, isXValid := validateCoordinate(x)
 		yInt, isYValid := validateCoordinate(y)
-	
+
 		if !isXValid || !isYValid {
-			errs = append(errs, fmt.Errorf("Invalid coordinates at station %s in line #%d: %v, %v\n", name, lineNum + i + 1, x, y))
+			errs = append(errs, fmt.Errorf("Invalid coordinates at station %s in line #%d: %v, %v\n", name, lineNum+i+1, x, y))
 			continue
 		}
 
@@ -116,7 +114,7 @@ func parseConnections(lines []string, lineNum int) (map[string]map[string]struct
 	var errs []error
 
 	for i, line := range lines {
-		line,_,_ := strings.Cut(line, "#") // Remove comments
+		line, _, _ := strings.Cut(line, "#") // Remove comments
 
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -125,19 +123,19 @@ func parseConnections(lines []string, lineNum int) (map[string]map[string]struct
 		parts := trimSpaceSlice(strings.Split(line, "-"))
 
 		if len(parts) != 2 {
-			errs = append(errs, fmt.Errorf("Malformed connection format in line #%d: %s\n", lineNum + i + 1, line))
+			errs = append(errs, fmt.Errorf("Malformed connection format in line #%d: %s\n", lineNum+i+1, line))
 			continue
 		}
 
 		start, end := parts[0], parts[1]
 
 		if !validateStationName(start) || !validateStationName(end) {
-			errs = append(errs, fmt.Errorf("Malformed station names in line #%d: %s\n", lineNum + i + 1, line))
+			errs = append(errs, fmt.Errorf("Malformed station names in line #%d: %s\n", lineNum+i+1, line))
 			continue
 		}
 
 		if start == end {
-			errs = append(errs, fmt.Errorf("Error on line #%d. Start and end connections are the same: %s", lineNum + i + 1, line))
+			errs = append(errs, fmt.Errorf("Error on line #%d. Start and end connections are the same: %s", lineNum+i+1, line))
 			continue
 		}
 
@@ -161,59 +159,7 @@ func trimSpaceSlice(s []string) []string {
 	trimmed := make([]string, 0, len(s))
 	for _, v := range s {
 		v = strings.TrimSpace(v)
-		trimmed = append(trimmed, v)	
+		trimmed = append(trimmed, v)
 	}
 	return trimmed
-}
-
-// validateStationName returns true if the station name meets the following criteria:
-// Comprised of lower-case letters, numbers and underscores (_) only. No special characters or other punctuation are allowed.
-func validateStationName(name string) bool {
-	if name == "" {
-		return false
-	}
-
-	for _, char := range name {
-		if !(unicode.IsLower(char) || unicode.IsNumber(char) || char == '_') {
-			return false
-		}
-	}
-
-	return true
-}
-
-// validateCoordinate returns the coordinate as an int and true if valid
-// Coordinate must be positive integer
-func validateCoordinate(c string) (int, bool) {
-	num, err := strconv.Atoi(c)
-
-	if err != nil || num < 1 {
-		return -1, false
-	}
-
-	return num, true
-}
-
-func main() {
-	text := `stations:
-		# south stations
-		waterloo  , 3 , 1
-		victoria,6,7
-
-		# north stations
-		euston,11,-23
-		st_pancras,5,15 # international
-		inValidStation, 1, 2
-
-		connections:
-		waterloo -victoria
-		waterloo- euston  
-		st_pancras-euston
-		victoria-st_pancras
-		toronto--waterloo
-		toronto-WATERLOO
-		new_york - new_york
-		`
-
-	parseNetworkMap(text)
 }
