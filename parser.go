@@ -23,7 +23,7 @@ type Station struct {
 
 // parseNetworkMap extracts the station and connections data from the network map
 // It returns a station map, connections map, and an error if data in the network map is malformed or invalid
-func parseNetworkMap(text string) (map[StationName]Station, map[StationName]map[StationName]struct{}, error) {
+func parseNetworkMap(text string) (NetworkData, error) {
 	lines := strings.Split(text, "\n")
 
 	var parsingSection string
@@ -57,19 +57,21 @@ func parseNetworkMap(text string) (map[StationName]Station, map[StationName]map[
 	}
 
 	if stationLineNum == 0 {
-		return nil, nil, errors.New("Error: Missing \"stations:\" section")
+		return NetworkData{}, errors.New("Error: Missing \"stations:\" section")
 	}
 
 	if connectionsLineNum == 0 {
-		return nil, nil, errors.New("Error: Missing \"connections:\" section")
+		return NetworkData{}, errors.New("Error: Missing \"connections:\" section")
 	}
 
 	stationMap, err1 := parseStations(stationsBuffer, stationLineNum)
 	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum, stationMap)
-	fmt.Println(err1)
-	fmt.Println(err2)
+	// fmt.Println(err1)
+	// fmt.Println(err2)
 
-	return stationMap, networkMap, errors.Join(err1, err2)
+	networkData := NetworkData{stationMap, networkMap}
+
+	return networkData, errors.Join(err1, err2)
 }
 
 // parseStations parses the stations section of the network map and returns a station map: map[StationName]Station
