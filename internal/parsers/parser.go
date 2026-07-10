@@ -7,7 +7,7 @@ import (
 )
 
 type NetworkData struct {
-	StationMap map[StationName]Station 
+	StationMap map[StationName]Station
 	NetworkMap map[StationName]map[StationName]struct{} // The network map links each station to a set of all connecting stations
 }
 
@@ -15,8 +15,8 @@ type StationName = string
 
 type Station struct {
 	name string
-	x int
-	y int
+	x    int
+	y    int
 }
 
 // parseNetworkMap extracts the station and connections data from the network map
@@ -73,7 +73,7 @@ func ParseNetworkMap(text string) (NetworkData, error) {
 		fmt.Println(err2)
 		return NetworkData{}, err2
 	}
-	
+
 	networkData := NetworkData{stationMap, networkMap}
 
 	return networkData, nil
@@ -119,7 +119,7 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 		// Check for duplicate coordinates
 		var coordinates string = x + "," + y
 		if _, ok := seenCoordinates[coordinates]; ok {
-			errs = append(errs, fmt.Errorf("Duplicate coordinates in line #%d: %s\n", lineNum + i + 1, coordinates))
+			errs = append(errs, fmt.Errorf("Duplicate coordinates in line #%d: %s\n", lineNum+i+1, coordinates))
 			continue
 		}
 		seenCoordinates[coordinates] = struct{}{}
@@ -127,8 +127,8 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 		if !lineHasError {
 			_, ok := stationMap[name]
 			if ok {
-				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum + i + 1))
-				continue				
+				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum+i+1))
+				continue
 			}
 			stationMap[name] = Station{name, xInt, yInt}
 		}
@@ -165,15 +165,15 @@ func parseConnections(lines []string, lineNum int, stationMap map[StationName]St
 			continue
 		}
 
-		// Check that the stations exist 
-		_, startExists := stationMap[start] 
-		_, endExists := stationMap[end] 
+		// Check that the stations exist
+		_, startExists := stationMap[start]
+		_, endExists := stationMap[end]
 		if !startExists || !endExists {
 			if !startExists {
-				errs = append(errs, fmt.Errorf("Non-existent start station in line #%d: %s\n", lineNum + i + 1, start))
+				errs = append(errs, fmt.Errorf("Non-existent start station in line #%d: %s\n", lineNum+i+1, start))
 			}
 			if !endExists {
-				errs = append(errs, fmt.Errorf("Non-existent end station in line #%d: %s\n", lineNum + i + 1, end))
+				errs = append(errs, fmt.Errorf("Non-existent end station in line #%d: %s\n", lineNum+i+1, end))
 			}
 			continue
 		}
@@ -193,8 +193,8 @@ func parseConnections(lines []string, lineNum int, stationMap map[StationName]St
 		// Check duplicate connections
 		_, ok := connectionsMap[start][end]
 		if ok {
-			errs = append(errs, fmt.Errorf("Error on line #%d. Duplicate connections between %s and %s", lineNum + i + 1, start, end))
-			continue		
+			errs = append(errs, fmt.Errorf("Error on line #%d. Duplicate connections between %s and %s", lineNum+i+1, start, end))
+			continue
 		}
 
 		// Add each start/end station as a connection to each other in the connectionsMap

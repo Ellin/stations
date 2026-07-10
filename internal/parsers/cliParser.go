@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"pathinder/model"
+	"strings"
 )
 
 // using flag here in case we want to add more flag later on
@@ -18,15 +19,17 @@ func ParseArgs() (*model.ArgsInfo, error) {
 	if len(args) < 4 {
 		return nil, errors.New("Error: Insufficient number of arguments.\n")
 	}
+
 	TrainNumber, isValid := validateCoordinate(args[3])
+	startStation, endStation := strings.ToLower(args[1]), strings.ToLower(args[2])
 
 	if err := validateMapFile(args[0]); err != nil {
 		return nil, fmt.Errorf("Error: %v", err)
 	}
-	if !validateStationName(args[1]) {
+	if !validateStationName(startStation) {
 		return nil, fmt.Errorf("Error: Invalid Start Station Name %s.\n", args[1])
 	}
-	if !validateStationName(args[2]) {
+	if !validateStationName(endStation) {
 		return nil, fmt.Errorf("Error: Invalid End Station Name %s.n\n", args[2])
 	}
 	if !isValid {
@@ -34,8 +37,8 @@ func ParseArgs() (*model.ArgsInfo, error) {
 	}
 
 	argList.MapFile = args[0]
-	argList.StartStation = args[1]
-	argList.EndStation = args[2]
+	argList.StartStation = startStation
+	argList.EndStation = endStation
 	argList.TrainCount = TrainNumber
 
 	return &argList, nil

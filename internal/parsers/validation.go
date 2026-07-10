@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -46,6 +47,18 @@ func validateMapFile(file string) error {
 	ex := filepath.Ext(file)
 	if ex != ".map" {
 		return fmt.Errorf("Invalid File Extension '%s', Allowed extentions = [.map].\n", ex)
+	}
+	return nil
+}
+
+func ValidateStartAndEndStation(network *NetworkData, startStation, endStation string) error {
+	_, startFound := network.StationMap[startStation]
+	_, endFound := network.StationMap[endStation]
+	if !startFound {
+		return errors.New("Start Station Not Found In The Map")
+	}
+	if !endFound {
+		return errors.New("End Station Not Found In The Map")
 	}
 	return nil
 }
