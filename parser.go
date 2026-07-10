@@ -65,7 +65,7 @@ func parseNetworkMap(text string) (map[StationName]Station, map[StationName]map[
 	}
 
 	stationMap, err1 := parseStations(stationsBuffer, stationLineNum)
-	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum)
+	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum, stationMap)
 	fmt.Println(err1)
 	fmt.Println(err2)
 
@@ -123,7 +123,7 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 }
 
 // parseConnections parses the connections section of the network map and creates a connections map linking all connected stations
-func parseConnections(lines []string, lineNum int) (map[StationName]map[StationName]struct{}, error) {
+func parseConnections(lines []string, lineNum int, stationMap map[StationName]Station) (map[StationName]map[StationName]struct{}, error) {
 	// The connections map is a map where each station (name) is a key and the value is a set of all its connecting stations
 	connectionsMap := make(map[StationName]map[StationName]struct{})
 	var errs []error
@@ -146,6 +146,19 @@ func parseConnections(lines []string, lineNum int) (map[StationName]map[StationN
 
 		if !validateStationName(start) || !validateStationName(end) {
 			errs = append(errs, fmt.Errorf("Malformed station names in line #%d: %s\n", lineNum + i + 1, line))
+			continue
+		}
+
+		// Check that the stations exist 
+		_, startExists := stationMap[start] 
+		_, endExists := stationMap[end] 
+		if !startExists || !endExists {
+			if !startExists {
+				errs = append(errs, fmt.Errorf("Non-existent start station in line #%d: %s\n", lineNum + i + 1, start))
+			}
+			if !endExists {
+				errs = append(errs, fmt.Errorf("Non-existent end station in line #%d: %s\n", lineNum + i + 1, end))
+			}
 			continue
 		}
 
@@ -223,7 +236,7 @@ func main() {
 		waterloo, 6 , 1
 
 		# north stations
-		euston,11,-23
+		euston,11,23
 		st_pancras,5,15 # international
 		inValidStation, 1, 2
 
