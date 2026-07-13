@@ -3,6 +3,8 @@ package parsers
 import (
 	"errors"
 	"fmt"
+
+	// "fmt"
 	"strings"
 )
 
@@ -134,7 +136,7 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 		}
 	}
 
-	fmt.Printf("Valid stations:\n%v\n", stationMap)
+	// fmt.Printf("Valid stations:\n%v\n", stationMap)
 	return stationMap, errors.Join(errs...)
 }
 
@@ -202,7 +204,7 @@ func parseConnections(lines []string, lineNum int, stationMap map[StationName]St
 		connectionsMap[end][start] = struct{}{}
 	}
 
-	fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
+	// fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
 	return connectionsMap, errors.Join(errs...)
 }
 

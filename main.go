@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"pathinder/internal/parsers"
+	"pathinder/internal/pathfinding_alg_test"
 )
 
 func main() {
@@ -19,9 +20,14 @@ func main() {
 
 	networkData, networkErr := parsers.ParseNetworkMap(fileText)
 	close(networkErr)
-
+	// fmt.Println(networkData.NetworkMap)
+	// fmt.Println("con")
+	// fmt.Println(networkData.StationMap)
 	StationErr := parsers.ValidateStartAndEndStation(&networkData, arg.StartStation, arg.EndStation)
 	close(StationErr)
+
+	res := pathfinding_alg_test.DFSAlg(&networkData, arg.StartStation, arg.EndStation)
+	fmt.Println("maybe>", res)
 }
 
 // exit progremm with 1 if argument err is not nil
