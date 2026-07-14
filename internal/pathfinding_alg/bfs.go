@@ -1,9 +1,10 @@
-package pathfinding_alg_test
+package pathfinding_alg
 
 import (
 	"container/list"
 	"fmt"
 	"pathinder/internal/parsers"
+	"slices"
 )
 
 func BFSAlg(network *parsers.NetworkData, start, end string) []parsers.StationName {
@@ -19,8 +20,7 @@ func BFSAlg(network *parsers.NetworkData, start, end string) []parsers.StationNa
 	for queue.Len() > 0 {
 		firstNode := queue.Front()
 		queue.Remove(firstNode)
-		current :=
-			firstNode.Value.(parsers.StationName)
+		current := firstNode.Value.(parsers.StationName)
 		fmt.Println(current)
 
 		if current == end {
@@ -43,8 +43,8 @@ func BFSAlg(network *parsers.NetworkData, start, end string) []parsers.StationNa
 	track := []parsers.StationName{}
 
 	for from := end; from != start; from = backtrack[from] {
-		track = append([]parsers.StationName{from}, track...)
+		track = append(track, from)
 	}
-
+	slices.Reverse(track)
 	return track
 }

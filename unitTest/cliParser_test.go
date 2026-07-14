@@ -18,38 +18,49 @@ func TestParseArgs(t *testing.T) {
 		{
 			name: "valid",
 			args: []string{
-				"network/m5.map",
+				"../network/map1.map",
 				"waterloo",
 				"st_pancras",
 				"3",
 			},
 			wantErr: false,
-			want:    "waterloo,st_pancras,3",
+			want:    "waterloo st_pancras 3",
 		},
 		{
 			name: "Insufficient argument",
 			args: []string{
-				"network/m5.map",
+				"../network/m5.map",
 				"waterloo",
 			},
 			wantErr: true,
-			want:    "Error: Insufficient number of arguments.\n",
+			want:    "Error: Incorrect Lenght Of Arguments To See The Usage run: \n\n\t\t'go run . -h'\n",
+		}, {
+			name: "Insufficient argument",
+			args: []string{
+				"../network/m5.map",
+				"waterloo",
+				"st_pancras",
+				"3",
+				"4",
+			},
+			wantErr: true,
+			want:    "Error: Incorrect Lenght Of Arguments To See The Usage run: \n\n\t\t'go run . -h'\n",
 		},
 		{
 			name: "notfound map",
 			args: []string{
-				"network/notfound.map",
+				"../network/notfound.map",
 				"waterloo",
 				"st_pancras",
 				"3",
 			},
 			wantErr: true,
-			want:    "Error: File network/notfound.map Does Not Exist.\n",
+			want:    "Error: File ../network/notfound.map Does Not Exist.\n",
 		},
 		{
 			name: "invalid file ext",
 			args: []string{
-				"network/map2.txt",
+				"../network/map2.txt",
 				"waterloo",
 				"st_pancras",
 				"3",
@@ -69,17 +80,17 @@ func TestParseArgs(t *testing.T) {
 					t.Errorf("want error, got nil")
 				}
 				if err.Error() != tests.want {
-					t.Errorf("error = %v, want %v", err, tests.want)
+					t.Errorf("Test %v: got %v, want %v", tests.name, err, tests.want)
 				}
 				return
 			}
 			if err != nil {
-				t.Fatalf("test %s unexpected error: %v", tests.name, err)
+				t.Fatalf("Test %s > unexpected error: %v", tests.name, err)
 			}
 
-			gotresult := fmt.Sprintf("%s%s%d", got.StartStation, got.EndStation, got.TrainCount)
+			gotresult := fmt.Sprintf("%s %s %d", got.StartStation, got.EndStation, got.TrainCount)
 			if gotresult != tests.want {
-				t.Errorf("got %v, want %v", gotresult, tests.want)
+				t.Errorf("Test %v: got %v, want %v", tests.name, gotresult, tests.want)
 			}
 		})
 	}

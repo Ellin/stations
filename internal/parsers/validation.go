@@ -40,14 +40,15 @@ func validateCoordinate(c string) (int, bool) {
 // validateMapFile returns error if file doesn't exist or file extention is not map else it returns nil
 // it takes file name type string
 func validateMapFile(file string) error {
+	ex := filepath.Ext(file)
+	if ex != ".map" {
+		return fmt.Errorf("Invalid File Extension '%s', Allowed extentions = [.map].", ex)
+	}
 	_, err := os.Stat(file)
 	if os.IsNotExist(err) {
 		return fmt.Errorf("File %s Does Not Exist.\n", file)
 	}
-	ex := filepath.Ext(file)
-	if ex != ".map" {
-		return fmt.Errorf("Invalid File Extension '%s', Allowed extentions = [.map].\n", ex)
-	}
+
 	return nil
 }
 

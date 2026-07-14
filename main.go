@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 	"pathinder/internal/parsers"
-	"pathinder/internal/pathfinding_alg_test"
+	"pathinder/internal/pathfinding_alg"
+	"time"
 )
 
 func main() {
@@ -26,8 +27,13 @@ func main() {
 	StationErr := parsers.ValidateStartAndEndStation(&networkData, arg.StartStation, arg.EndStation)
 	close(StationErr)
 
-	res := pathfinding_alg_test.DFSAlg(&networkData, arg.StartStation, arg.EndStation)
-	fmt.Println("maybe>", res)
+	start := time.Now()
+	bfs := pathfinding_alg.BFSAlg(&networkData, arg.StartStation, arg.EndStation)
+	fmt.Printf("\nprocess Time %v \nmaybe> bfs %v\n\n", time.Since(start), bfs)
+
+	start = time.Now()
+	dfs := pathfinding_alg.DFSAlg(&networkData, arg.StartStation, arg.EndStation)
+	fmt.Printf("process Time %v \nmaybe> dfs %v\n", time.Since(start), dfs)
 }
 
 // exit progremm with 1 if argument err is not nil
@@ -37,3 +43,10 @@ func close(err error) {
 		os.Exit(1)
 	}
 }
+
+// func timer(alg func()) {
+// 	start := time.Now()
+// 	route := alg()
+// 	fmt.Println("process time: %v", time.Since(start))
+// 	fmt.Println("maybe>", route)
+// }
