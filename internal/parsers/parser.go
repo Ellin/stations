@@ -9,6 +9,8 @@ import (
 type NetworkData struct {
 	StationMap map[StationName]Station
 	NetworkMap map[StationName]map[StationName]struct{} // The network map links each station to a set of all connecting stations
+	Start StationName
+	End StationName
 }
 
 type StationName = string
@@ -74,7 +76,7 @@ func ParseNetworkMap(text string) (NetworkData, error) {
 		return NetworkData{}, err2
 	}
 
-	networkData := NetworkData{stationMap, networkMap}
+	networkData := NetworkData{StationMap: stationMap, NetworkMap: networkMap,}
 
 	return networkData, nil
 }

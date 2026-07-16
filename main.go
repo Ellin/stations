@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"pathinder/internal/parsers"
+	"pathinder/internal/paths"
 )
 
 func main() {
@@ -22,6 +23,15 @@ func main() {
 
 	StationErr := parsers.ValidateStartAndEndStation(&networkData, arg.StartStation, arg.EndStation)
 	close(StationErr)
+
+	networkData.Start, networkData.End = arg.StartStation, arg.EndStation
+	paths.Bfs(networkData.NetworkMap, arg.StartStation, arg.EndStation)
+	graph := paths.Graph{}
+	graph.CreateVertexMaps(networkData)
+	fmt.Printf("\nVertexIDMap: %#v\n", graph.VertexIDMap)
+	graph.CreateEKGraph(networkData)
+
+	graph.PrintGraph(networkData)
 }
 
 // exit progremm with 1 if argument err is not nil
