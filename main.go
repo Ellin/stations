@@ -32,6 +32,8 @@ func main() {
 	graph.CreateEKGraph(networkData)
 
 	graph.PrintGraph(networkData)
+
+	graph.EdmondsKarp(arg.StartStation, arg.EndStation)
 }
 
 // exit progremm with 1 if argument err is not nil
