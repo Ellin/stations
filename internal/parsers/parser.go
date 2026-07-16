@@ -11,15 +11,16 @@ import (
 type NetworkData struct {
 	StationMap map[StationName]Station
 	NetworkMap map[StationName]map[StationName]struct{} // The network map links each station to a set of all connecting stations
+	Start      StationName
+	End        StationName
 }
 
 type StationName = string
 
 type Station struct {
-	name      string
-	x         int
-	y         int
-	Cap, Flow int
+	name string
+	x    int
+	y    int
 }
 
 // parseNetworkMap extracts the station and connections data from the network map
@@ -76,7 +77,7 @@ func ParseNetworkMap(text string) (NetworkData, error) {
 		return NetworkData{}, err2
 	}
 
-	networkData := NetworkData{stationMap, networkMap}
+	networkData := NetworkData{StationMap: stationMap, NetworkMap: networkMap}
 
 	return networkData, nil
 }
@@ -132,7 +133,7 @@ func ParseStations(lines []string, lineNum int) (map[StationName]Station, error)
 				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum+i+1))
 				continue
 			}
-			stationMap[name] = Station{name, xInt, yInt, 1, 0}
+			stationMap[name] = Station{name, xInt, yInt}
 		}
 	}
 
