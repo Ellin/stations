@@ -6,8 +6,9 @@ import (
 	"slices"
 )
 
-func BFSAlg(network *parsers.NetworkData, start, end string) []parsers.StationName {
-	nodemap := network.NetworkMap
+func BFSAlg2(network *parsers.NetworkData, start, end string) []parsers.StationName {
+	networkmap := network.NetworkMap
+	Stationmap := network.StationMap
 
 	visited := map[parsers.StationName]bool{start: true}
 	backtrack := map[parsers.StationName]parsers.StationName{}
@@ -26,8 +27,8 @@ func BFSAlg(network *parsers.NetworkData, start, end string) []parsers.StationNa
 			found = true
 			break
 		}
-		for neighbor := range nodemap[current] {
-			if !visited[neighbor] {
+		for neighbor := range networkmap[current] {
+			if !visited[neighbor] && Stationmap[neighbor].Cap > 0 {
 				visited[neighbor] = true
 				queue.PushBack(neighbor)
 				backtrack[neighbor] = current

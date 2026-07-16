@@ -16,9 +16,10 @@ type NetworkData struct {
 type StationName = string
 
 type Station struct {
-	name string
-	x    int
-	y    int
+	name      string
+	x         int
+	y         int
+	Cap, Flow int
 }
 
 // parseNetworkMap extracts the station and connections data from the network map
@@ -63,13 +64,12 @@ func ParseNetworkMap(text string) (NetworkData, error) {
 	if connectionsLineNum == 0 {
 		return NetworkData{}, errors.New("Error: Missing \"connections:\" section")
 	}
-
-	stationMap, err1 := parseStations(stationsBuffer, stationLineNum)
+	stationMap, err1 := ParseStations(stationsBuffer, stationLineNum)
 	if err1 != nil {
 		fmt.Println(err1)
 		return NetworkData{}, err1
 	}
-
+	// fmt.Println("stations map", stationMap)
 	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum, stationMap)
 	if err2 != nil {
 		fmt.Println(err2)
@@ -82,7 +82,7 @@ func ParseNetworkMap(text string) (NetworkData, error) {
 }
 
 // parseStations parses the stations section of the network map and returns a station map: map[StationName]Station
-func parseStations(lines []string, lineNum int) (map[StationName]Station, error) {
+func ParseStations(lines []string, lineNum int) (map[StationName]Station, error) {
 	stationMap := make(map[StationName]Station)
 	var errs []error
 	seenCoordinates := make(map[string]struct{})
@@ -132,7 +132,7 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum+i+1))
 				continue
 			}
-			stationMap[name] = Station{name, xInt, yInt}
+			stationMap[name] = Station{name, xInt, yInt, 1, 0}
 		}
 	}
 
