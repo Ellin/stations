@@ -15,6 +15,7 @@ type Edge struct {
 	To int // node index
 	Cap int
 	Rev int
+	Real bool // indicates whether an edge is real (forward) edge or false (reverse) edge
 }
 
 func (g *Graph) CreateVertexMaps(nd parsers.NetworkData) {
@@ -44,6 +45,7 @@ func (g *Graph) AddEdge(fromID, toID int) {
 		To: toID,
 		Cap: 1, // Since all tracks and stations have max cap 1
 		Rev: len(g.EKGraph[toID]), // the array index of the reverse edge within a node's adjacency list (NOT a vertex ID)
+		Real: true,
 	}
 
 	// Since the reverse edge is always added to the adjacency list of the opposite node and added at the same time as creation,
@@ -53,6 +55,7 @@ func (g *Graph) AddEdge(fromID, toID int) {
 		To: fromID,
 		Cap: 0, // Since the reverse edges are not real edges, capacity is 0
 		Rev: len(g.EKGraph[fromID]),
+		Real: false,
 	}
 
 	// Add the forward and reverse edges to the corresponding adjacency lists
