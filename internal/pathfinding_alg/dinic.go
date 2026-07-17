@@ -2,50 +2,26 @@ package pathfinding_alg
 
 import (
 	"fmt"
-	"math"
 	"pathinder/internal/parsers"
 )
 
-type Graph struct {
-	Level []int
-}
+func (g *Graph) DinicAlg(start, end string) ([][]string, error) {
 
-func DinicAlg(network *parsers.NetworkData, start, end string) ([]string, error) {
-	networkmap := network.NetworkMap
-	Stationmap := network.StationMap
-	// g := &Graph{
-	// 	Level: make([]int, len(Stationmap)),
-	// }
-
-	pathList := []parsers.StationName{}
+	pathList := [][]parsers.StationName{} // contains the path list from dfs search
 	max_flow := 0
 
-	setToInf(network, start, end)
-	fmt.Println(max_flow)
-	fmt.Println(networkmap)
-	fmt.Println(Stationmap)
+	// checks if there is actually a path available if so it keep looping untill all node cap are full
+	for g.BFSAlg2(start, end) {
 
-	// for _, v := range Stationmap {
-	for range 3 {
-		path := BFSAlg2(network, start, end)
-		if path == nil {
-			break
+		for {
+			foundFlow, path := g.DFSAlg(start, end)
+			if foundFlow == 0 {
+				break
+			}
+			max_flow += foundFlow
+			pathList = append(pathList, path)
 		}
-		for range path {
-
-		}
-		max_flow += 1
 	}
-	// }
+	fmt.Println("max Flow at a time :", max_flow) // max flow is the same lenght as the path we found
 	return pathList, nil
-}
-
-func setToInf(network *parsers.NetworkData, start, end string) {
-	nodeStart := network.StationMap[start]
-	nodeStart.Cap = math.MaxInt
-	network.StationMap[start] = nodeStart
-
-	nodeEnd := network.StationMap[end]
-	nodeEnd.Cap = math.MaxInt
-	network.StationMap[end] = nodeEnd
 }

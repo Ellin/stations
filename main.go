@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"pathinder/internal/parsers"
+	"pathinder/internal/pathfinding_alg"
 	"pathinder/internal/paths"
 )
 
@@ -28,12 +29,20 @@ func main() {
 
 	networkData.Start, networkData.End = arg.StartStation, arg.EndStation
 	paths.Bfs(networkData.NetworkMap, arg.StartStation, arg.EndStation)
-	graph := paths.Graph{}
-	graph.CreateVertexMaps(networkData)
-	fmt.Printf("\nVertexIDMap: %#v\n", graph.VertexIDMap)
-	graph.CreateEKGraph(networkData)
 
-	graph.PrintGraph(networkData)
+	graph := pathfinding_alg.Graph{}
+	graph.CreateVertexMaps(networkData)
+	// fmt.Printf("\nVertexIDMap: %#v\n", graph.VertexIDMap)
+	graph.CreateEKGraph(networkData)
+	// graph.PrintGraph(networkData)
+	// fmt.Println("\n\n", graph)
+	paths, err := graph.DinicAlg(arg.StartStation, arg.EndStation)
+	close(err)
+
+	for _, p := range paths {
+		fmt.Println("\n\n> path: ", p)
+	}
+
 }
 
 // exit progremm with 1 if argument err is not nil

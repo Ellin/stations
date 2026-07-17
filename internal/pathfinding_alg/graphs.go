@@ -1,18 +1,20 @@
-package paths
+package pathfinding_alg
 
 import (
-	"pathinder/internal/parsers"
 	"fmt"
+	"pathinder/internal/parsers"
 )
 
 type Graph struct {
-	EKGraph map[int][]Edge
-	VertexIDMap map[int]parsers.StationName
+	EKGraph       map[int][]Edge
+	VertexIDMap   map[int]parsers.StationName
 	VertexNameMap map[parsers.StationName]int
+	LeveL         []int // use this array to make the level graph is seprates the nodes into tree like form
+	// it stores the distance bw current node and source
 }
 
 type Edge struct {
-	To int // node index
+	To  int // node index
 	Cap int
 	Rev int
 }
@@ -23,26 +25,27 @@ func (g *Graph) CreateVertexMaps(nd parsers.NetworkData) {
 	g.VertexIDMap = make(map[int]parsers.StationName)
 	g.VertexNameMap = make(map[parsers.StationName]int) // maps station names with V_in ID. V_out ID == V_in ID + 1.
 
-	var i int 
+	var i int
 	for station, _ := range nd.NetworkMap {
-		g.VertexIDMap[i] = station 
+		g.VertexIDMap[i] = station
 		g.VertexNameMap[station] = i
 
 		// split all vertexes that are not start and end
-		if station != nd.Start && station != nd.End {	
+		if station != nd.Start && station != nd.End {
 			g.VertexIDMap[i+1] = station // V_out
 			i += 2
 		} else {
 			i++
 		}
 	}
+	g.LeveL = make([]int, len(g.VertexIDMap))
 }
 
 // Given edge A->B, create an edge from A->B and also a corresponding reverse edge B->A with cap: 0
 func (g *Graph) AddEdge(fromID, toID int) {
 	forward := Edge{
-		To: toID,
-		Cap: 1, // Since all tracks and stations have max cap 1
+		To:  toID,
+		Cap: 1,                    // Since all tracks and stations have max cap 1
 		Rev: len(g.EKGraph[toID]), // the array index of the reverse edge within a node's adjacency list (NOT a vertex ID)
 	}
 
@@ -50,7 +53,7 @@ func (g *Graph) AddEdge(fromID, toID int) {
 	// we know the index of the newly added edge will be the length of the list (i.e. the index of the last element + 1)
 
 	reverse := Edge{
-		To: fromID,
+		To:  fromID,
 		Cap: 0, // Since the reverse edges are not real edges, capacity is 0
 		Rev: len(g.EKGraph[fromID]),
 	}
@@ -59,7 +62,6 @@ func (g *Graph) AddEdge(fromID, toID int) {
 	g.EKGraph[fromID] = append(g.EKGraph[fromID], forward)
 	g.EKGraph[toID] = append(g.EKGraph[toID], reverse)
 }
-
 
 func (g *Graph) CreateEKGraph(nd parsers.NetworkData) {
 	g.EKGraph = make(map[int][]Edge)
@@ -82,7 +84,6 @@ func (g *Graph) CreateEKGraph(nd parsers.NetworkData) {
 	}
 }
 
-
 func (g *Graph) PrintGraph(nd parsers.NetworkData) {
 	fmt.Printf("\nTRANSFORMED EKGRAPH \n")
 
@@ -100,7 +101,6 @@ func (g *Graph) PrintGraph(nd parsers.NetworkData) {
 			fmt.Printf("%v --- Edges: ", station)
 		}
 
-		
 		for _, edge := range list {
 			fmt.Printf("%v (cap: %v), ", g.VertexIDMap[edge.To], edge.Cap)
 		}
