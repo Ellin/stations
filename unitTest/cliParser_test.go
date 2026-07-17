@@ -69,7 +69,7 @@ func TestParseArgs(t *testing.T) {
 			want:    "Error: Invalid File Extension '.txt', Allowed extentions = [.map].",
 		},
 	} {
-		t.Run("", func(t *testing.T) {
+		t.Run(tests.name, func(t *testing.T) {
 			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError) // reset flag  with each test
 			os.Args = append([]string{"program"}, tests.args...)
 

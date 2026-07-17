@@ -15,7 +15,6 @@ func (g *Graph) BFSAlg2(start, end string) bool {
 	queue := list.New()
 	queue.PushBack(startID)
 	g.LeveL[startID] = 0 // we set the start level count to 0 since its the sourse and its 0 distance away from the start
-
 	for queue.Len() > 0 {
 		firstNode := queue.Front()
 		queue.Remove(firstNode)
@@ -30,6 +29,7 @@ func (g *Graph) BFSAlg2(start, end string) bool {
 
 		}
 	}
+
 	return g.LeveL[endID] >= 0
 }
 
