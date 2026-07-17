@@ -42,7 +42,6 @@ func (g *Graph) Bfs(start, end VertexID) (parents map[VertexID][]int, found bool
 
 				if edge.To == end {
 					// path found
-					g.createPath(parents, end)
 					return parents, true
 				}
 			}
