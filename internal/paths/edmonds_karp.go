@@ -20,23 +20,16 @@ func (g *Graph) Bfs(start, end VertexID) (parents map[VertexID][]int, found bool
 
 	for len(queue) > 0 {
 		curr := queue[0]
-
-		// dequeue current
-		queue = queue[1:]
+		queue = queue[1:] // dequeue current
 
 		connections, ok := g.EKGraph[curr]
-		fmt.Printf("CONNECTIONS to %v: %v", g.VertexIDMap[curr], connections)
 		if !ok {
 			log.Fatal("Non-existent key in EK graph")
 		}
 
 		for i, edge := range connections {
-			// fmt.Println("edge: ", edge)
-			// fmt.Println("Cap:", edge.Cap)
-
 			// enqueue all unexplored neighbors that have residual capacity along with parent information
 			if _, ok := seen[edge.To]; !ok && edge.Cap > 0{
-				fmt.Println("Adding unexplored neighbour: %v", g.VertexIDMap[edge.To])
 				queue = append(queue, edge.To)
 				parents[edge.To] = []int{curr, i} 
 				seen[edge.To] = struct{}{}
@@ -46,57 +39,54 @@ func (g *Graph) Bfs(start, end VertexID) (parents map[VertexID][]int, found bool
 					return parents, true
 				}
 			}
-
-
 		}
 	}
 
 	return nil, false
 }
 
-func (g *Graph) createPath(parents map[VertexID][]int, end VertexID) []VertexID {
+// traceAugmentedPath follows the path from the sink up to the source using the parents map
+// The residual capacities of the used edges in the augmented path are updated
+// Returns a list of nodes in the path from start to sink
+func (g *Graph) traceAugmentedPath(parents map[VertexID][]int, end VertexID) []VertexID {
 	path := []VertexID{end}
 
 	parent, ok := parents[end]
 	for ok {
 		parentID, toIndex := parent[0], parent[1]
-		path = append(path, parentID)
-
+		
 		// Decrease residual cap (.Cap) of forward edges and increase on reverse edges
 		forward := &g.EKGraph[parentID][toIndex]
-		reverse := &g.EKGraph[forward.To][forward.Rev]
-		
+		reverse := &g.EKGraph[forward.To][forward.Rev]	
 		forward.Cap--
 		reverse.Cap++
-		fmt.Printf("forward cap from %v to %v: %v\n", g.VertexIDMap[parentID], g.VertexIDMap[forward.To], forward.Cap)
-		fmt.Println("reverse cap", reverse.Cap)
 
+		path = append(path, parentID)
 		parent, ok = parents[parentID]
 	}
 
 	slices.Reverse(path)
 
-
 	return path
 }
 
-func (g *Graph) EdmondsKarp(start, end parsers.StationName) (maxFlow int, allPaths [][]VertexID, realPaths [][][]VertexID){
+func (g *Graph) EdmondsKarp(start, end parsers.StationName) (maxFlow int, augmentingPaths [][]VertexID, realPaths [][][]VertexID){
 	startID, endID := g.VertexNameMap[start], g.VertexNameMap[end]	
 	parents, found := g.Bfs(startID, endID)
 	for found {
-		// Update the residual capacities (no need to find minimal residual capacity bottleneck as it will always be 1 in our case)
-		allPaths = append(allPaths, g.createPath(parents, endID))
-		maxFlow++
+		// Update the residual capacities by tracing the augmented path
+		// No need to find minimal residual capacity bottleneck for updating the maxFlow as it will always be 1 in our case
+		augmentingPaths = append(augmentingPaths, g.traceAugmentedPath(parents, endID))
+		maxFlow++ 
 
-		// find REAL paths
+		// Find REAL paths without any reverse edges
+		// Run BFS maxFlow amount of times as we know maxFlow == # of non-overlapping paths that can be found
 		usedMap := make(map[VertexID]map[VertexID]struct{})
 		var foundPath []VertexID
 		var flowPathSet [][]VertexID
-		// fmt.Printf("FOUND PATHS FOR FLOW %v:\n", maxFlow)
 		for i := maxFlow; i > 0; i-- {
 			parents_real, _ := g.Bfs_flow(startID, endID, usedMap)
-			foundPath = g.createPath_real(parents_real, usedMap, startID, endID)
-			g.printPaths([][]VertexID{foundPath})
+			foundPath = g.traceRealPath(parents_real, usedMap, startID, endID)
 			flowPathSet = append(flowPathSet, foundPath)
 		}
 		realPaths = append(realPaths, flowPathSet)
@@ -104,23 +94,56 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName) (maxFlow int, allPat
 		parents, found = g.Bfs(startID, endID)
 	}
 
-	fmt.Println(maxFlow, allPaths)
+	g.prettifyPaths(realPaths)
+	g.printEdmondsKarpResults(maxFlow, augmentingPaths, realPaths)
+	
+	return maxFlow, augmentingPaths, realPaths
+}
+
+// prettifyPaths converts paths containing split vertexes to a readable form
+// Splits vertexes are rejoined and vertex ids are converted back to station names
+func (g *Graph) prettifyPaths(realPaths [][][]VertexID) (realStationPaths [][][]string) {
+	for _, pathSet := range realPaths {
+		var convertedPathSet [][]string
+		for _, path := range pathSet {
+			var prev string
+			var convertedPath []string
+			for _, vertexID := range path {
+				stationName := g.VertexIDMap[vertexID]
+				if prev != stationName {
+					convertedPath = append(convertedPath, stationName)
+					prev = stationName
+				}
+			}
+			convertedPathSet = append(convertedPathSet, convertedPath)
+		}
+		realStationPaths = append(realStationPaths, convertedPathSet)
+	}
+	fmt.Println("PRETTY", realStationPaths)
+	return realStationPaths
+}
+
+func (g *Graph) printEdmondsKarpResults(maxFlow int, augmentingPaths [][]VertexID, realPaths [][][]VertexID) {
+	fmt.Println("Max flow:", maxFlow)
 	fmt.Println("!AUGMENTING PATHS:")
-	g.printPaths(allPaths)
+	g.printPaths(augmentingPaths)
 
 	fmt.Println("!REAL PATHS:")
 	for i, paths := range realPaths {
-		fmt.Printf("flow %v:\n", i+1)
+		fmt.Printf("Flow %v:\n", i+1)
 		g.printPaths(paths)
 	}
-
-	return maxFlow, allPaths, realPaths
 }
 
 func (g *Graph) printPaths(paths [][]VertexID) {
 	for _, path := range paths {
+		var prevStation string
 		for _, id := range path {
-			fmt.Print(g.VertexIDMap[id], "->")
+			station := g.VertexIDMap[id]
+			if prevStation != station { // Collapse split nodes
+				fmt.Print(station, "->")
+				prevStation = station
+			}
 		}
 		fmt.Println()
 	}
@@ -134,27 +157,22 @@ func (g *Graph) Bfs_flow(start, end VertexID, usedMap map[VertexID]map[VertexID]
 	seen[start] = struct{}{}
 
 	for len(queue) > 0 {
-		curr := queue[0]
-
-		// dequeue current
-		queue = queue[1:]
+		curr := queue[0]		
+		queue = queue[1:] // dequeue current
 
 		connections, ok := g.EKGraph[curr]
-		// fmt.Printf("CONNECTIONS to %v: %v", g.VertexIDMap[curr], connections)
 		if !ok {
 			log.Fatal("Non-existent key in EK graph")
 		}
 
 		for i, edge := range connections {
 			if _, ok := seen[edge.To]; !ok && edge.Cap == 0 && edge.Real && !isUsed(usedMap, curr, edge.To) {
-				fmt.Println("Adding unexplored neighbour:", g.VertexIDMap[edge.To])
 				queue = append(queue, edge.To)
 				parents[edge.To] = []int{curr, i} 
 				seen[edge.To] = struct{}{}
 
 				if edge.To == end {
-					// path found
-					fmt.Printf("FOUND. LAST EDGE: %v to %v\n", curr, edge.To)
+					// path found)
 					return parents, true
 				}
 			}
@@ -172,22 +190,20 @@ func isUsed(usedMap map[VertexID]map[VertexID]struct{}, fromID int, toID int) bo
 	return false
 }
 
-func (g *Graph) createPath_real(parents map[VertexID][]int, usedMap map[VertexID]map[VertexID]struct{}, start, end VertexID, ) (path []VertexID) {
-	path = append(path, end)
+func (g *Graph) traceRealPath(parents map[VertexID][]int, usedMap map[VertexID]map[VertexID]struct{}, start, end VertexID) []VertexID {
+	path := []VertexID{end}
 
 	parent, ok := parents[end]
-
 	for ok {
 		parentID, toIndex := parent[0], parent[1]
 		toID := g.EKGraph[parentID][toIndex].To
-		
-		path = append(path, parentID)
 
 		if _, ok := usedMap[parentID]; !ok {
 			usedMap[parentID] = make(map[VertexID]struct{})
 		}
 		usedMap[parentID][toID] = struct{}{}
 
+		path = append(path, parentID)
 		parent, ok = parents[parentID]
 	}
 
