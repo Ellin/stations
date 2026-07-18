@@ -49,13 +49,18 @@ func (g *Graph) Bfs(version string, start, end VertexID, usedMap map[VertexID]ma
 	return nil, false
 }
 
+// canTravel is a helper for the Bfs function that checks if an edge can be travelled upon
+// The edge travelling conditions depend on the Bfs version: looking for augmenting paths vs real paths
 func canTravel(version string, edge Edge, from VertexID, usedMap map[VertexID]map[VertexID]struct{}) bool {
 	switch version {
 	case "aug":
 		return edge.Cap > 0
 
 	case "real":
+		// Only real edges (no reverse edges) that had flow when finding augmenting paths (reducing its capacity to 0)
+		// that haven't already been used in real path finding should be used
 		return edge.Cap == 0 && edge.Real && !isUsed(usedMap, from, edge.To)
+		
 	default:
 		return false
 	}
@@ -163,6 +168,7 @@ func (g *Graph) printPaths(paths [][]VertexID) {
 	}
 }
 
+// isUsed checks if an edge has already been used during real path finding
 func isUsed(usedMap map[VertexID]map[VertexID]struct{}, fromID int, toID int) bool {
 	if _, ok := usedMap[fromID]; ok {
 		_, used := usedMap[fromID][toID]
@@ -171,6 +177,9 @@ func isUsed(usedMap map[VertexID]map[VertexID]struct{}, fromID int, toID int) bo
 	return false
 }
 
+// traceRealPath follows the path from the sink (end) up to the source (start) using the parents map
+// Used edges are recorded in usedMap so that next iterations of Bfs for finding real paths can't use the same edges
+// Returns a list of nodes in the path from start to sink
 func (g *Graph) traceRealPath(parents map[VertexID]Parent, usedMap map[VertexID]map[VertexID]struct{}, start, end VertexID) []VertexID {
 	path := []VertexID{end}
 
