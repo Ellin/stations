@@ -11,12 +11,12 @@ type VertexID = int
 
 
 // Parents map: the []int value holds a pair of values: the parent vertex ID and the INDEX within its []Edge array where the "to" edge can be found 
-func (g *Graph) Bfs(start, end VertexID) (parents map[VertexID][]int, found bool) {
+func (g *Graph) Bfs(version string, start, end VertexID, usedMap map[VertexID]map[VertexID]struct{}) (parents map[VertexID][]int, found bool) {
 	var queue = []VertexID{start}
-	var seen = make(map[VertexID]struct{})
+	var seenMap = make(map[VertexID]struct{})
 	parents = make(map[VertexID][]int) 
 
-	seen[start] = struct{}{}
+	seenMap[start] = struct{}{}
 
 	for len(queue) > 0 {
 		curr := queue[0]
@@ -29,10 +29,11 @@ func (g *Graph) Bfs(start, end VertexID) (parents map[VertexID][]int, found bool
 
 		for i, edge := range connections {
 			// enqueue all unexplored neighbors that have residual capacity along with parent information
-			if _, ok := seen[edge.To]; !ok && edge.Cap > 0{
+			_, seen := seenMap[edge.To] 
+			if !seen && canTravel(version, edge, curr, usedMap) {
 				queue = append(queue, edge.To)
 				parents[edge.To] = []int{curr, i} 
-				seen[edge.To] = struct{}{}
+				seenMap[edge.To] = struct{}{}
 
 				if edge.To == end {
 					// path found
@@ -43,6 +44,18 @@ func (g *Graph) Bfs(start, end VertexID) (parents map[VertexID][]int, found bool
 	}
 
 	return nil, false
+}
+
+func canTravel(version string, edge Edge, from VertexID, usedMap map[VertexID]map[VertexID]struct{}) bool {
+	switch version {
+	case "aug":
+		return edge.Cap > 0
+
+	case "real":
+		return edge.Cap == 0 && edge.Real && !isUsed(usedMap, from, edge.To)
+	default:
+		return false
+	}
 }
 
 // traceAugmentedPath follows the path from the sink up to the source using the parents map
@@ -72,7 +85,7 @@ func (g *Graph) traceAugmentedPath(parents map[VertexID][]int, end VertexID) []V
 
 func (g *Graph) EdmondsKarp(start, end parsers.StationName) (maxFlow int, augmentingPaths [][]VertexID, realPaths [][][]VertexID){
 	startID, endID := g.VertexNameMap[start], g.VertexNameMap[end]	
-	parents, found := g.Bfs(startID, endID)
+	parents, found := g.Bfs("aug", startID, endID, nil)
 	for found {
 		// Update the residual capacities by tracing the augmented path
 		// No need to find minimal residual capacity bottleneck for updating the maxFlow as it will always be 1 in our case
@@ -85,13 +98,13 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName) (maxFlow int, augmen
 		var foundPath []VertexID
 		var flowPathSet [][]VertexID
 		for i := maxFlow; i > 0; i-- {
-			parents_real, _ := g.Bfs_flow(startID, endID, usedMap)
+			parents_real, _ := g.Bfs("real", startID, endID, usedMap)
 			foundPath = g.traceRealPath(parents_real, usedMap, startID, endID)
 			flowPathSet = append(flowPathSet, foundPath)
 		}
 		realPaths = append(realPaths, flowPathSet)
 
-		parents, found = g.Bfs(startID, endID)
+		parents, found = g.Bfs("aug", startID, endID, nil)
 	}
 
 	g.prettifyPaths(realPaths)
@@ -147,39 +160,6 @@ func (g *Graph) printPaths(paths [][]VertexID) {
 		}
 		fmt.Println()
 	}
-}
-
-func (g *Graph) Bfs_flow(start, end VertexID, usedMap map[VertexID]map[VertexID]struct{}) (parents map[VertexID][]int, found bool) {
-	var queue = []VertexID{start}
-	var seen = make(map[VertexID]struct{})
-	parents = make(map[VertexID][]int) 
-
-	seen[start] = struct{}{}
-
-	for len(queue) > 0 {
-		curr := queue[0]		
-		queue = queue[1:] // dequeue current
-
-		connections, ok := g.EKGraph[curr]
-		if !ok {
-			log.Fatal("Non-existent key in EK graph")
-		}
-
-		for i, edge := range connections {
-			if _, ok := seen[edge.To]; !ok && edge.Cap == 0 && edge.Real && !isUsed(usedMap, curr, edge.To) {
-				queue = append(queue, edge.To)
-				parents[edge.To] = []int{curr, i} 
-				seen[edge.To] = struct{}{}
-
-				if edge.To == end {
-					// path found)
-					return parents, true
-				}
-			}
-		}
-	}
-
-	return nil, false
 }
 
 func isUsed(usedMap map[VertexID]map[VertexID]struct{}, fromID int, toID int) bool {
