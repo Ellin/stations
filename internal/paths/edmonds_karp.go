@@ -9,12 +9,15 @@ import (
 
 type VertexID = int
 
+type Parent struct {
+	ID VertexID // parent ID
+	ToEdgeIndex int // Index within the parent's []Edge array where the "to" edge can be found (using the EKGraph)
+}
 
-// Parents map: the []int value holds a pair of values: the parent vertex ID and the INDEX within its []Edge array where the "to" edge can be found 
-func (g *Graph) Bfs(version string, start, end VertexID, usedMap map[VertexID]map[VertexID]struct{}) (parents map[VertexID][]int, found bool) {
+func (g *Graph) Bfs(version string, start, end VertexID, usedMap map[VertexID]map[VertexID]struct{}) (parents map[VertexID]Parent, found bool) {
 	var queue = []VertexID{start}
 	var seenMap = make(map[VertexID]struct{})
-	parents = make(map[VertexID][]int) 
+	parents = make(map[VertexID]Parent) 
 
 	seenMap[start] = struct{}{}
 
@@ -32,7 +35,7 @@ func (g *Graph) Bfs(version string, start, end VertexID, usedMap map[VertexID]ma
 			_, seen := seenMap[edge.To] 
 			if !seen && canTravel(version, edge, curr, usedMap) {
 				queue = append(queue, edge.To)
-				parents[edge.To] = []int{curr, i} 
+				parents[edge.To] = Parent{curr, i} 
 				seenMap[edge.To] = struct{}{}
 
 				if edge.To == end {
@@ -61,21 +64,19 @@ func canTravel(version string, edge Edge, from VertexID, usedMap map[VertexID]ma
 // traceAugmentedPath follows the path from the sink up to the source using the parents map
 // The residual capacities of the used edges in the augmented path are updated
 // Returns a list of nodes in the path from start to sink
-func (g *Graph) traceAugmentedPath(parents map[VertexID][]int, end VertexID) []VertexID {
+func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) []VertexID {
 	path := []VertexID{end}
 
 	parent, ok := parents[end]
-	for ok {
-		parentID, toIndex := parent[0], parent[1]
-		
+	for ok {		
 		// Decrease residual cap (.Cap) of forward edges and increase on reverse edges
-		forward := &g.EKGraph[parentID][toIndex]
+		forward := &g.EKGraph[parent.ID][parent.ToEdgeIndex]
 		reverse := &g.EKGraph[forward.To][forward.Rev]	
 		forward.Cap--
 		reverse.Cap++
 
-		path = append(path, parentID)
-		parent, ok = parents[parentID]
+		path = append(path, parent.ID)
+		parent, ok = parents[parent.ID]
 	}
 
 	slices.Reverse(path)
@@ -170,21 +171,20 @@ func isUsed(usedMap map[VertexID]map[VertexID]struct{}, fromID int, toID int) bo
 	return false
 }
 
-func (g *Graph) traceRealPath(parents map[VertexID][]int, usedMap map[VertexID]map[VertexID]struct{}, start, end VertexID) []VertexID {
+func (g *Graph) traceRealPath(parents map[VertexID]Parent, usedMap map[VertexID]map[VertexID]struct{}, start, end VertexID) []VertexID {
 	path := []VertexID{end}
 
 	parent, ok := parents[end]
 	for ok {
-		parentID, toIndex := parent[0], parent[1]
-		toID := g.EKGraph[parentID][toIndex].To
+		toID := g.EKGraph[parent.ID][parent.ToEdgeIndex].To
 
-		if _, ok := usedMap[parentID]; !ok {
-			usedMap[parentID] = make(map[VertexID]struct{})
+		if _, ok := usedMap[parent.ID]; !ok {
+			usedMap[parent.ID] = make(map[VertexID]struct{})
 		}
-		usedMap[parentID][toID] = struct{}{}
+		usedMap[parent.ID][toID] = struct{}{}
 
-		path = append(path, parentID)
-		parent, ok = parents[parentID]
+		path = append(path, parent.ID)
+		parent, ok = parents[parent.ID]
 	}
 
 	slices.Reverse(path)
