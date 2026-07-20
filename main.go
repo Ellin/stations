@@ -31,9 +31,10 @@ func main() {
 	fmt.Printf("\nVertexIDMap: %#v\n", graph.VertexIDMap)
 	graph.CreateEKGraph(networkData)
 
-	graph.PrintGraph(networkData)
+//graph.PrintGraph(networkData)
 
-	graph.EdmondsKarp(arg.StartStation, arg.EndStation)
+	// graph.EdmondsKarp(arg.StartStation, arg.EndStation, arg.TrainCount)
+	graph.RunScheduler(arg.StartStation, arg.EndStation, arg.TrainCount)
 }
 
 // exit progremm with 1 if argument err is not nil
