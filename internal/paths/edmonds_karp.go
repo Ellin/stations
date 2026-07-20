@@ -60,7 +60,7 @@ func canTravel(version string, edge Edge, from VertexID, usedMap map[VertexID]ma
 		// Only real edges (no reverse edges) that had flow when finding augmenting paths (reducing its capacity to 0)
 		// that haven't already been used in real path finding should be used
 		return edge.Cap == 0 && edge.Real && !isUsed(usedMap, from, edge.To)
-		
+
 	default:
 		return false
 	}
@@ -89,9 +89,13 @@ func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) []
 	return path
 }
 
-func (g *Graph) EdmondsKarp(start, end parsers.StationName) (maxFlow int, augmentingPaths [][]VertexID, realPaths [][][]VertexID){
+func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxFlow int, stationPaths [][][]parsers.StationName){
 	startID, endID := g.VertexNameMap[start], g.VertexNameMap[end]	
 	parents, found := g.Bfs("aug", startID, endID, nil)
+
+	var augmentingPaths [][]VertexID
+	var realPaths [][][]VertexID
+
 	for found {
 		// Update the residual capacities by tracing the augmented path
 		// No need to find minimal residual capacity bottleneck for updating the maxFlow as it will always be 1 in our case
@@ -111,12 +115,16 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName) (maxFlow int, augmen
 		realPaths = append(realPaths, flowPathSet)
 
 		parents, found = g.Bfs("aug", startID, endID, nil)
+
+		if maxFlow >= numTrains {
+			break 
+		}
 	}
 
-	g.prettifyPaths(realPaths)
-	g.printEdmondsKarpResults(maxFlow, augmentingPaths, realPaths)
 	
-	return maxFlow, augmentingPaths, realPaths
+	g.printEdmondsKarpResults(maxFlow, augmentingPaths, realPaths)
+	stationPaths = g.prettifyPaths(realPaths)
+	return maxFlow, stationPaths
 }
 
 // prettifyPaths converts paths containing split vertexes to a readable form
