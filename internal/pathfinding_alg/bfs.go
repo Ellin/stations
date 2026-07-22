@@ -2,48 +2,77 @@ package pathfinding_alg
 
 import (
 	"container/list"
-	"pathinder/internal/parsers"
-	"slices"
 )
 
-func BFSAlg(network *parsers.NetworkData, start, end string) []parsers.StationName {
-	nodemap := network.NetworkMap
+func (g *Graph) BFSAlg(start, end string) bool {
 
-	visited := map[parsers.StationName]bool{start: true}
-	backtrack := map[parsers.StationName]parsers.StationName{}
+	//reset level node to -1 to mark it as not visited
+	g.ResetLevel()
+
+	startID := g.VertexNameMap[start]
+	endID := g.VertexNameMap[end]
 
 	queue := list.New()
-	queue.PushBack(start)
-
-	found := false
+	queue.PushBack(startID)
+	g.LeveL[startID] = 0 // we set the start level count to 0 since its the sourse and its 0 distance away from the start
 	for queue.Len() > 0 {
 		firstNode := queue.Front()
 		queue.Remove(firstNode)
-		current := firstNode.Value.(parsers.StationName)
-		// fmt.Println(current)
+		current := firstNode.Value.(int)
 
-		if current == end {
-			found = true
-			break
-		}
-		for neighbor := range nodemap[current] {
-			if !visited[neighbor] {
-				visited[neighbor] = true
-				queue.PushBack(neighbor)
-				backtrack[neighbor] = current
+		// v := g.VertexNameMap[current]
+		for _, e := range g.EKGraph[current] { // go throught the neighbor edges of the current node
+			if g.LeveL[e.To] < 0 && e.Cap > 0 { // check if level node is count is empty = -1 and cap is not used in another path
+				g.LeveL[e.To] = g.LeveL[current] + 1 // increment the neighbor level with parent level count
+				queue.PushBack(e.To)
 			}
 
 		}
 	}
-	if !found {
-		return nil
+
+	return g.LeveL[endID] >= 0 // return false if a level was not set for the end path
+	//  meaning there is no path between start and end
+}
+
+func (g *Graph) BFSFlowCorrection(start, end string) bool {
+
+	//reset level node to -1 to mark it as not visited
+	g.ResetLevel()
+
+	startID := g.VertexNameMap[start]
+	endID := g.VertexNameMap[end]
+
+	queue := list.New()
+	queue.PushBack(startID)
+	g.LeveL[startID] = 0 // we set the start level count to 0 since its the sourse and its 0 distance away from the start
+	for queue.Len() > 0 {
+		firstNode := queue.Front()
+		queue.Remove(firstNode)
+		current := firstNode.Value.(int)
+
+		// v := g.VertexNameMap[current]
+		for _, e := range g.EKGraph[current] { // go throught the neighbor edges of the current node
+
+			if e.Reverse {
+				continue
+			}
+			rev := &g.EKGraph[e.To][e.Rev]
+			if g.LeveL[e.To] < 0 && rev.Cap > 0 { // check if level node is count is empty = -1 and cap is not used in another path
+				g.LeveL[e.To] = g.LeveL[current] + 1 // increment the neighbor level with parent level count
+				queue.PushBack(e.To)
+			}
+
+		}
 	}
 
-	track := []parsers.StationName{}
+	return g.LeveL[endID] >= 0 // return false if a level was not set for the end path
+	//  meaning there is no path between start and end
+}
 
-	for from := end; from != start; from = backtrack[from] {
-		track = append(track, from)
+// graph level reseter func  reset each node to -1 meaning empty in this case
+func (g *Graph) ResetLevel() {
+	for i := range g.LeveL {
+		g.LeveL[i] = -1
+		g.DeadEnd[i] = false
 	}
-	slices.Reverse(track)
-	return track
 }

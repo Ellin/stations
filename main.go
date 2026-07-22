@@ -6,6 +6,7 @@ import (
 	"pathinder/internal/parsers"
 	"pathinder/internal/pathfinding_alg"
 	"pathinder/internal/paths"
+	"time"
 )
 
 func main() {
@@ -36,6 +37,7 @@ func main() {
 	graph.CreateEKGraph(networkData)
 	// graph.PrintGraph(networkData)
 	// fmt.Println("\n\n", graph)
+
 	paths, err := graph.DinicAlg(arg.StartStation, arg.EndStation)
 	close(err)
 
@@ -53,9 +55,8 @@ func close(err error) {
 	}
 }
 
-// func timer(alg func()) {
-// 	start := time.Now()
-// 	route := alg()
-// 	fmt.Println("process time: %v", time.Since(start))
-// 	fmt.Println("maybe>", route)
-// }
+func timer(alg func()) {
+	start := time.Now()
+	alg()
+	fmt.Printf("\033[32m Execution Time: %v \033[0m\n", time.Since(start))
+}

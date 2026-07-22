@@ -16,7 +16,7 @@ func TestParseArgs(t *testing.T) {
 		want    string
 	}{
 		{
-			name: "valid",
+			name: "Valid",
 			args: []string{
 				"../network/map1.map",
 				"waterloo",
@@ -47,7 +47,7 @@ func TestParseArgs(t *testing.T) {
 			want:    "Error: Incorrect Lenght Of Arguments To See The Usage run: \n\n\t\t'go run . -h'\n",
 		},
 		{
-			name: "notfound map",
+			name: "Notfound map",
 			args: []string{
 				"../network/notfound.map",
 				"waterloo",
@@ -58,7 +58,7 @@ func TestParseArgs(t *testing.T) {
 			want:    "Error: File ../network/notfound.map Does Not Exist.\n",
 		},
 		{
-			name: "invalid file ext",
+			name: "Invalid file ext",
 			args: []string{
 				"../network/map2.txt",
 				"waterloo",
@@ -77,10 +77,10 @@ func TestParseArgs(t *testing.T) {
 
 			if tests.wantErr {
 				if err == nil {
-					t.Errorf("want error, got nil")
+					t.Fatalf("want error, got nil")
 				}
 				if err.Error() != tests.want {
-					t.Errorf("Test %v: got %v, want %v", tests.name, err, tests.want)
+					t.Fatalf("Test %v: got %v, want %v", tests.name, err, tests.want)
 				}
 				return
 			}

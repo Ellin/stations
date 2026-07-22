@@ -1,21 +1,17 @@
 package pathfinding_alg
 
 import (
-	"fmt"
-	"pathinder/internal/parsers"
+	"pathinder/model"
 )
 
 func (g *Graph) DinicAlg(start, end string) ([][]string, error) {
 
-	pathList := [][]parsers.StationName{} // contains the path list from dfs search
+	pathList := [][]model.StationName{} // contains the path list from dfs search
 	max_flow := 0
 
-	if len(g.EKGraph)%2 != 0 { // check if the edge cound is odd meaning start or end Station is missing
-		return pathList, fmt.Errorf("Error: Invalid Station Missing Start or End Station .\n")
-	}
-
 	// checks if there is actually a path available if so it keep looping untill all node cap are full
-	for g.BFSAlg2(start, end) {
+	for g.BFSAlg(start, end) {
+
 		for {
 			foundFlow, _ := g.DFSAlg(false, start, end)
 			if foundFlow == 0 {
@@ -23,10 +19,12 @@ func (g *Graph) DinicAlg(start, end string) ([][]string, error) {
 			}
 			max_flow += foundFlow
 		}
-
 	}
 
 	for range max_flow {
+		if !g.BFSFlowCorrection(start, end) { // rebuild depth graph for the flow correction for dfs again, based on the reverse cap
+			break
+		}
 		foundFlow, path := g.DFSAlg(true, start, end)
 		if foundFlow == 0 {
 			break
