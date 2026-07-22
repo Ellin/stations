@@ -3,27 +3,17 @@ package parsers
 import (
 	"errors"
 	"fmt"
+	"pathinder/model"
+
+	// "fmt"
 	"strings"
 )
 
-type NetworkData struct {
-	StationMap map[StationName]Station
-	NetworkMap map[StationName]map[StationName]struct{} // The network map links each station to a set of all connecting stations
-	Start StationName
-	End StationName
-}
-
 type StationName = string
-
-type Station struct {
-	name string
-	x    int
-	y    int
-}
 
 // parseNetworkMap extracts the station and connections data from the network map
 // It returns a station map, connections map, and an error if data in the network map is malformed or invalid
-func ParseNetworkMap(text string) (NetworkData, error) {
+func ParseNetworkMap(text string) (model.NetworkData, error) {
 	lines := strings.Split(text, "\n")
 
 	var parsingSection string
@@ -57,33 +47,32 @@ func ParseNetworkMap(text string) (NetworkData, error) {
 	}
 
 	if stationLineNum == 0 {
-		return NetworkData{}, errors.New("Error: Missing \"stations:\" section")
+		return model.NetworkData{}, errors.New("Error: Missing \"stations:\" section")
 	}
 
 	if connectionsLineNum == 0 {
-		return NetworkData{}, errors.New("Error: Missing \"connections:\" section")
+		return model.NetworkData{}, errors.New("Error: Missing \"connections:\" section")
 	}
-
-	stationMap, err1 := parseStations(stationsBuffer, stationLineNum)
+	stationMap, err1 := ParseStations(stationsBuffer, stationLineNum)
 	if err1 != nil {
 		fmt.Println(err1)
-		return NetworkData{}, err1
+		return model.NetworkData{}, err1
 	}
-
-	networkMap, err2 := parseConnections(connectionsBuffer, connectionsLineNum, stationMap)
+	// fmt.Println("stations map", stationMap)
+	networkMap, err2 := ParseConnections(connectionsBuffer, connectionsLineNum, stationMap)
 	if err2 != nil {
 		fmt.Println(err2)
-		return NetworkData{}, err2
+		return model.NetworkData{}, err2
 	}
 
-	networkData := NetworkData{StationMap: stationMap, NetworkMap: networkMap,}
+	networkData := model.NetworkData{StationMap: stationMap, NetworkMap: networkMap}
 
 	return networkData, nil
 }
 
 // parseStations parses the stations section of the network map and returns a station map: map[StationName]Station
-func parseStations(lines []string, lineNum int) (map[StationName]Station, error) {
-	stationMap := make(map[StationName]Station)
+func ParseStations(lines []string, lineNum int) (map[StationName]model.Station, error) {
+	stationMap := make(map[StationName]model.Station)
 	var errs []error
 	seenCoordinates := make(map[string]struct{})
 
@@ -132,16 +121,16 @@ func parseStations(lines []string, lineNum int) (map[StationName]Station, error)
 				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum+i+1))
 				continue
 			}
-			stationMap[name] = Station{name, xInt, yInt}
+			stationMap[name] = model.Station{Name: name, X: xInt, Y: yInt}
 		}
 	}
 
-	fmt.Printf("Valid stations:\n%v\n", stationMap)
+	// fmt.Printf("Valid stations:\n%v\n", stationMap)
 	return stationMap, errors.Join(errs...)
 }
 
 // parseConnections parses the connections section of the network map and creates a connections map linking all connected stations
-func parseConnections(lines []string, lineNum int, stationMap map[StationName]Station) (map[StationName]map[StationName]struct{}, error) {
+func ParseConnections(lines []string, lineNum int, stationMap map[StationName]model.Station) (map[StationName]map[StationName]struct{}, error) {
 	// The connections map is a map where each station (name) is a key and the value is a set of all its connecting stations
 	connectionsMap := make(map[StationName]map[StationName]struct{})
 	var errs []error
@@ -204,7 +193,7 @@ func parseConnections(lines []string, lineNum int, stationMap map[StationName]St
 		connectionsMap[end][start] = struct{}{}
 	}
 
-	fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
+	// fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
 	return connectionsMap, errors.Join(errs...)
 }
 

@@ -1,23 +1,23 @@
 package paths
 
 import (
-	"pathinder/internal/parsers"
 	"fmt"
-	"slices"
 	"log"
+	"pathinder/internal/parsers"
+	"slices"
 )
 
 type VertexID = int
 
 type Parent struct {
-	ID VertexID // parent ID
-	ToEdgeIndex int // Index within the parent's []Edge array where the "to" edge can be found (using the EKGraph)
+	ID          VertexID // parent ID
+	ToEdgeIndex int      // Index within the parent's []Edge array where the "to" edge can be found (using the EKGraph)
 }
 
 func (g *Graph) Bfs(version string, start, end VertexID, usedMap map[VertexID]map[VertexID]struct{}) (parents map[VertexID]Parent, found bool) {
 	var queue = []VertexID{start}
 	var seenMap = make(map[VertexID]struct{})
-	parents = make(map[VertexID]Parent) 
+	parents = make(map[VertexID]Parent)
 
 	seenMap[start] = struct{}{}
 
@@ -32,10 +32,10 @@ func (g *Graph) Bfs(version string, start, end VertexID, usedMap map[VertexID]ma
 
 		for i, edge := range connections {
 			// enqueue all unexplored neighbors that have residual capacity along with parent information
-			_, seen := seenMap[edge.To] 
+			_, seen := seenMap[edge.To]
 			if !seen && canTravel(version, edge, curr, usedMap) {
 				queue = append(queue, edge.To)
-				parents[edge.To] = Parent{curr, i} 
+				parents[edge.To] = Parent{curr, i}
 				seenMap[edge.To] = struct{}{}
 
 				if edge.To == end {
@@ -73,10 +73,10 @@ func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) []
 	path := []VertexID{end}
 
 	parent, ok := parents[end]
-	for ok {		
+	for ok {
 		// Decrease residual cap (.Cap) of forward edges and increase on reverse edges
 		forward := &g.EKGraph[parent.ID][parent.ToEdgeIndex]
-		reverse := &g.EKGraph[forward.To][forward.Rev]	
+		reverse := &g.EKGraph[forward.To][forward.Rev]
 		forward.Cap--
 		reverse.Cap++
 
@@ -89,8 +89,8 @@ func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) []
 	return path
 }
 
-func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxFlow int, stationPaths [][][]parsers.StationName){
-	startID, endID := g.VertexNameMap[start], g.VertexNameMap[end]	
+func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxFlow int, stationPaths [][][]parsers.StationName) {
+	startID, endID := g.VertexNameMap[start], g.VertexNameMap[end]
 	parents, found := g.Bfs("aug", startID, endID, nil)
 
 	var augmentingPaths [][]VertexID
@@ -100,7 +100,7 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxF
 		// Update the residual capacities by tracing the augmented path
 		// No need to find minimal residual capacity bottleneck for updating the maxFlow as it will always be 1 in our case
 		augmentingPaths = append(augmentingPaths, g.traceAugmentedPath(parents, endID))
-		maxFlow++ 
+		maxFlow++
 
 		// Find REAL paths without any reverse edges
 		// Run BFS maxFlow amount of times as we know maxFlow == # of non-overlapping paths that can be found
@@ -117,11 +117,10 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxF
 		parents, found = g.Bfs("aug", startID, endID, nil)
 
 		if maxFlow >= numTrains {
-			break 
+			break
 		}
 	}
 
-	
 	g.printEdmondsKarpResults(maxFlow, augmentingPaths, realPaths)
 	stationPaths = g.prettifyPaths(realPaths)
 	return maxFlow, stationPaths

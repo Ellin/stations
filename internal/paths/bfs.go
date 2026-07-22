@@ -5,8 +5,6 @@ import (
 	"slices"
 )
 
-type StationName = string
-
 func Bfs(networkMap map[StationName]map[StationName]struct{}, start string, end string) []StationName {
 	var queue = []StationName{start}
 	var seen = make(map[StationName]struct{})

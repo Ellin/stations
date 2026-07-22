@@ -3,31 +3,45 @@
 package paths
 
 import (
-	"pathinder/internal/parsers"
-	"strconv" 
 	"fmt"
+	"pathinder/internal/parsers"
+	"strconv"
 )
 
 type Train struct {
-	Name string // e.g. "T1"
-	PathID int // Index of the path within a pathSet the train is scheduled to use
-	CurrentStationIndex int // e.g. path: ["waterloo", "victoria", "st_pancras"] ; "waterloo" -> index 0
-	CurrentStationName parsers.StationName // e.g. "waterloo"
+	Name                string              // e.g. "T1"
+	PathID              int                 // Index of the path within a pathSet the train is scheduled to use
+	CurrentStationIndex int                 // e.g. path: ["waterloo", "victoria", "st_pancras"] ; "waterloo" -> index 0
+	CurrentStationName  parsers.StationName // e.g. "waterloo"
 }
 
-func (g *Graph) RunScheduler(start, end parsers.StationName, numTrains int) {
-	pathSet := g.FindPathSet(start, end, numTrains)
+func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int) error {
+
+	var pathSet [][]parsers.StationName
+	var err error
+
+	switch alg {
+	case "EdmondsKarp":
+		pathSet = g.FindPathSet(start, end, numTrains)
+	case "DinicAlg":
+		if pathSet, err = g.DinicAlg(start, end); err != nil {
+			return err
+		}
+		fmt.Println("PATH SET FOUND")
+		fmt.Println(pathSet)
+	}
 	pathMap := divideTrains(numTrains, pathSet)
 	turnSchedule := runTrains(end, pathSet, pathMap)
 	printSchedule(turnSchedule)
+	return nil
 }
-
 
 // ! NOTE: This should be further optimized to take into account cost given some # of trains, not just max flow
 // For example, the current algorithm for choosing a set of paths for 2 trains prefers a set of two very long non-overlapping paths
 // vs one very short path that blocks multiple non-overlapping paths.
 // But that short blocking path may still be the better path for certain number of trains.
 func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) (pathSet [][]parsers.StationName) {
+
 	flow, realPaths := g.EdmondsKarp(start, end, numTrains)
 	pathSet = realPaths[flow-1]
 	fmt.Println("PATH SET FOUND")
@@ -43,7 +57,7 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 		pathMap[i] = []Train{}
 	}
 
-	for i:=0; i < numTrains; i++ {
+	for i := 0; i < numTrains; i++ {
 
 		shortestTurnNum := getNumTurns(0, pathSet, pathMap)
 		shortestPathIndex := 0
@@ -59,8 +73,8 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 
 		// Schedule train
 		pathMap[shortestPathIndex] = append(pathMap[shortestPathIndex], Train{
-			Name: "T" + strconv.Itoa(i+1),
-			PathID: shortestPathIndex,
+			Name:                "T" + strconv.Itoa(i+1),
+			PathID:              shortestPathIndex,
 			CurrentStationIndex: 0,
 			CurrentStationName:  pathSet[shortestPathIndex][0],
 		})
@@ -78,7 +92,7 @@ func getNumTurns(pathID int, pathSet [][]parsers.StationName, pathMap map[int][]
 	return numHops + numWait
 }
 
-func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap map[int][]Train) ([][]string) {
+func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap map[int][]Train) [][]string {
 	var turnSchedule [][]string // e.g. [["T1-a", "T2-b"]["T1-c", "T2-d"]["T1-end","T2-end"]]
 
 	// Path index 0 = shortest path in a pathSet
@@ -112,7 +126,7 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 				//	IF NOT FIRST IN LINE, CHECK FIRST IF IT CAN MOVE FORWARD
 				if i > 0 {
 					prevStation := &pathMap[pathID][i-1]
-					if path[train.CurrentStationIndex + 1] != prevStation.CurrentStationName { // check if train in queue would be moving to the same station as the train ahead
+					if path[train.CurrentStationIndex+1] != prevStation.CurrentStationName { // check if train in queue would be moving to the same station as the train ahead
 						canMove = true
 					} else {
 						canMove = false
@@ -123,12 +137,12 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 					train.CurrentStationIndex++
 					nextStation := path[train.CurrentStationIndex]
 					train.CurrentStationName = nextStation
-					turnGroup = append(turnGroup, train.Name + "-" + nextStation)
+					turnGroup = append(turnGroup, train.Name+"-"+nextStation)
 				} else {
 					break
 				}
 			}
-			
+
 		}
 		turnSchedule = append(turnSchedule, turnGroup)
 	}
