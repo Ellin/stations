@@ -1,0 +1,17 @@
+a<->z
+
+stations:
+a, 1,1
+b ,2,2
+c, 3,3
+z ,6,6
+
+connections:
+a-b
+a-c
+a-z
+b-z
+c-z
+
+# shortest:  a-z
+# max flow: 3 (a-z, a-b-z, a,c,z)

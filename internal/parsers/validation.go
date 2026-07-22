@@ -26,11 +26,11 @@ func validateStationName(name string) bool {
 }
 
 // validateCoordinate returns the coordinate as an int and true if valid
-// Coordinate must be positive integer
+// Coordinate must be positive integer or zero
 func validateCoordinate(c string) (int, bool) {
 	num, err := strconv.Atoi(c)
 
-	if err != nil || num < 1 {
+	if err != nil || num < 0 {
 		return -1, false
 	}
 
