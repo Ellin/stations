@@ -1,4 +1,4 @@
-package pathfinding_alg
+package paths
 
 import (
 	"container/list"

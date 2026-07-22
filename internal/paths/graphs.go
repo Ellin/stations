@@ -1,4 +1,4 @@
-package pathfinding_alg
+package paths
 
 import (
 	"fmt"
@@ -17,10 +17,10 @@ type Graph struct {
 }
 
 type Edge struct {
-	To      int // node index
-	Cap     int
-	Rev     int
-	Reverse bool
+	To   int // node index
+	Cap  int
+	Rev  int
+	Real bool // indicates whether an edge is real (forward) edge or false (reverse) edge
 }
 
 func (g *Graph) CreateVertexMaps(nd model.NetworkData) {
@@ -49,20 +49,20 @@ func (g *Graph) CreateVertexMaps(nd model.NetworkData) {
 // Given edge A->B, create an edge from A->B and also a corresponding reverse edge B->A with cap: 0
 func (g *Graph) AddEdge(fromID, toID int) {
 	forward := Edge{
-		To:      toID,
-		Cap:     1,                    // Since all tracks and stations have max cap 1
-		Rev:     len(g.EKGraph[toID]), // the array index of the reverse edge within a node's adjacency list (NOT a vertex ID)
-		Reverse: false,
+		To:   toID,
+		Cap:  1,                    // Since all tracks and stations have max cap 1
+		Rev:  len(g.EKGraph[toID]), // the array index of the reverse edge within a node's adjacency list (NOT a vertex ID)
+		Real: true,
 	}
 
 	// Since the reverse edge is always added to the adjacency list of the opposite node and added at the same time as creation,
 	// we know the index of the newly added edge will be the length of the list (i.e. the index of the last element + 1)
 
 	reverse := Edge{
-		To:      fromID,
-		Cap:     0, // Since the reverse edges are not real edges, capacity is 0
-		Rev:     len(g.EKGraph[fromID]),
-		Reverse: true,
+		To:   fromID,
+		Cap:  0, // Since the reverse edges are not real edges, capacity is 0
+		Rev:  len(g.EKGraph[fromID]),
+		Real: false,
 	}
 
 	// Add the forward and reverse edges to the corresponding adjacency lists

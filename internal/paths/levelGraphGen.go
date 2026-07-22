@@ -1,4 +1,4 @@
-package pathfinding_alg
+package paths
 
 import (
 	"container/list"
@@ -53,7 +53,7 @@ func (g *Graph) BFSFlowCorrection(start, end string) bool {
 		// v := g.VertexNameMap[current]
 		for _, e := range g.EKGraph[current] { // go throught the neighbor edges of the current node
 
-			if e.Reverse {
+			if !e.Real {
 				continue
 			}
 			rev := &g.EKGraph[e.To][e.Rev]

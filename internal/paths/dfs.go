@@ -1,4 +1,4 @@
-package pathfinding_alg
+package paths
 
 import (
 	// "fmt"
@@ -78,7 +78,7 @@ func (g *Graph) dfsFlowCorrection(flow int, current, end int) ([]parsers.Station
 		e := &g.EKGraph[current][i]
 		rev := &g.EKGraph[e.To][e.Rev]
 
-		if e.Reverse {
+		if !e.Real {
 			continue
 		}
 		// alse check the level of the current agains the neighbors to prevent a loop around

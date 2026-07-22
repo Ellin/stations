@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"pathinder/internal/parsers"
-	"pathinder/internal/pathfinding_alg"
 	"pathinder/internal/paths"
 	"time"
 )
@@ -22,29 +21,36 @@ func main() {
 
 	networkData, networkErr := parsers.ParseNetworkMap(fileText)
 	close(networkErr)
-	// fmt.Println(networkData.NetworkMap)
-	// fmt.Println("con")
-	// fmt.Println(networkData.StationMap)
+
 	StationErr := parsers.ValidateStartAndEndStation(&networkData, arg.StartStation, arg.EndStation)
 	close(StationErr)
 
 	networkData.Start, networkData.End = arg.StartStation, arg.EndStation
 	paths.Bfs(networkData.NetworkMap, arg.StartStation, arg.EndStation)
 
-	graph := pathfinding_alg.Graph{}
+	graph := paths.Graph{}
 	graph.CreateVertexMaps(networkData)
 	// fmt.Printf("\nVertexIDMap: %#v\n", graph.VertexIDMap)
 	graph.CreateEKGraph(networkData)
 	// graph.PrintGraph(networkData)
 	// fmt.Println("\n\n", graph)
 
-	paths, err := graph.DinicAlg(arg.StartStation, arg.EndStation)
-	close(err)
+	// paths, err := graph.DinicAlg(arg.StartStation, arg.EndStation)
+	// close(err)
 
-	for _, p := range paths {
-		fmt.Println("\n\n> path: ", p)
-	}
+	// for _, p := range paths {
+	// 	fmt.Println("\n\n> path: ", p)
+	// }
 
+	//graph.PrintGraph(networkData)
+
+	// graph.EdmondsKarp(arg.StartStation, arg.EndStation, arg.TrainCount)
+
+	alg1 := "EdmondsKarp"
+	alg2 := "DinicAlg"
+	fmt.Println(alg1, alg2)
+	Schedulererr := graph.RunScheduler(arg.StartStation, arg.EndStation, alg2, arg.TrainCount)
+	close(Schedulererr)
 }
 
 // exit progremm with 1 if argument err is not nil

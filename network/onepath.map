@@ -1,0 +1,19 @@
+a-<>-z
+
+stations:
+a, 1,1
+b ,2,2
+c, 3,3
+d ,4,4
+e ,5,5
+z ,6,6
+
+connections:
+a-b
+b-c 
+c-e 
+b-d 
+d-e 
+e-z
+
+# expected: a-b-c-e-z OR a-b-d-e-z

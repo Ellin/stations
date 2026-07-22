@@ -1,0 +1,28 @@
+stations:
+a, 1,1
+b, 2,2
+c, 4,4
+d, 5,5
+e, 6,6
+f, 7,7
+g, 8,8
+h,9,9
+
+connections:
+a-b
+a-g
+b-e 
+b-c 
+e-f
+f-d
+c-d
+g-h
+h-c
+
+# Expected from a to d:
+# flow 1:
+# a-b-c-d
+ 
+# flow 2:
+# a-b-e-f-d
+# a-g-h-c-d

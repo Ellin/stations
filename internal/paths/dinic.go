@@ -1,7 +1,9 @@
-package pathfinding_alg
+package paths
 
 import (
+	"fmt"
 	"pathinder/model"
+	"slices"
 )
 
 func (g *Graph) DinicAlg(start, end string) ([][]string, error) {
@@ -29,8 +31,9 @@ func (g *Graph) DinicAlg(start, end string) ([][]string, error) {
 		if foundFlow == 0 {
 			break
 		}
-		pathList = append(pathList, path)
+
+		pathList = append(pathList, slices.Compact(path))
 	}
-	// fmt.Println("max Flow at a time :", max_flow) // max flow is the same lenght as the path we found
+	fmt.Println("max Flow at a time :", max_flow, "\n paths: ", pathList) // max flow is the same lenght as the path we found
 	return pathList, nil
 }
