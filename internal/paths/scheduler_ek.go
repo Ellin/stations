@@ -114,7 +114,7 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 		})
 	}
 
-//	fmt.Println(pathMap)
+	//	fmt.Println(pathMap)
 
 	return pathMap
 }
@@ -131,7 +131,6 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 
 	// Path index 0 = shortest path in a pathSet
 	// The shortest path in a pathSet will always have the most number of trains scheduled for it
-	numTurns := len(pathMap[0]) 
 
 	// While there are trains left to move
 	for len(pathMap[0]) > 0 {
@@ -179,9 +178,12 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 			}
 
 		}
+		
 		turnSchedule = append(turnSchedule, turnGroup)
 	}
-	fmt.Printf("\nTURN SCHEDULE (%v turns):\n%s", numTurns, turnSchedule)
+
+	turnSchedule = turnSchedule[:len(turnSchedule)-1] // Remove last empty turnGroup
+	
 	return turnSchedule
 }
 
@@ -195,5 +197,5 @@ func printSchedule(turnSchedule [][]string) {
 		scheduleStr += line + "\n"
 	}
 
-	fmt.Println(scheduleStr)
+	fmt.Printf("\nTURN SCHEDULE (%v turns):\n%s\n", len(turnSchedule), scheduleStr)
 }
