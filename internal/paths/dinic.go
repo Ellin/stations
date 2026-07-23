@@ -34,9 +34,9 @@ exit:
 		clear(pathList)
 		pathList = pathList[:0]
 		for range max_flow {
-			if !g.BFSFlowCorrection(start, end) { // rebuild depth graph for the flow correction for dfs again, based on the reverse cap
-				break
-			}
+			// if !g.BFSFlowCorrection(start, end) { // rebuild depth graph for the flow correction for dfs again, based on the reverse cap
+			// 	break
+			// }
 			foundFlow, path := g.DFSAlg(true, start, end)
 			if foundFlow == 0 {
 				break

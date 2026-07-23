@@ -41,10 +41,9 @@ func (g *Graph) dfs(flow int, current, end int) ([]parsers.StationName, int) {
 	for i := range g.EKGraph[current] { // loop around the neighbor of the current vertex
 
 		e := &g.EKGraph[current][i]
-		// if g.DeadEnd[e.To] { // skip neighbors that dont lead anywhere
-		// 	fmt.Println(e.To)
-		// 	continue
-		// }
+		if g.DeadEnd[e.To] { // skip neighbors that dont lead anywhere
+			continue
+		}
 		if g.LeveL[current] < g.LeveL[e.To] && e.Cap > 0 { // it checks if the neighbor edge is one level deeper(current vertex is alway higher in the level graph) and there is still a cap remaining for the edge
 			minCp := math.Min(float64(flow), float64(e.Cap)) // in this implementaion the flow and cap are always the same if cap is greater than 0 meaning its 1 then flow is also one but to be true to algorithm we are doing this part as well
 
@@ -85,7 +84,7 @@ func (g *Graph) dfsFlowCorrection(flow int, current, end int) ([]parsers.Station
 			continue
 		}
 		// alse check the level of the current agains the neighbors to prevent a loop around
-		if g.LeveL[current] < g.LeveL[e.To] && rev.Cap > 0 { // it checks if the neighbor's reverse edge (b-c reverse edge = c-b) has a remaining cap
+		if rev.Cap > 0 { // it checks if the neighbor's reverse edge (b-c reverse edge = c-b) has a remaining cap
 			minCp := math.Min(float64(flow), float64(rev.Cap)) // in this implementaion the flow and reverse cap are always the same if reverse cap is greater than 0 meaning its 1 then flow is also one but to be true to algorithm we are doing this part as well
 
 			path, flowReturn := g.dfsFlowCorrection(int(minCp), e.To, end) // call the dfs again this time the neighbor vertex as the source

@@ -32,9 +32,9 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 		fmt.Println("PATH SET FOUND")
 		fmt.Println(pathSet)
 	}
-	pathMap := divideTrains(numTrains, pathSet)
-	turnSchedule := runTrains(end, pathSet, pathMap)
-	printSchedule(turnSchedule)
+	// pathMap := divideTrains(numTrains, pathSet)
+	// turnSchedule := runTrains(end, pathSet, pathMap)
+	// printSchedule(turnSchedule)
 	return nil
 }
 
