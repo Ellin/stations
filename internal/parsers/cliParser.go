@@ -28,7 +28,7 @@ func ParseArgs() (*model.ArgsInfo, error) {
 	args := flag.Args()
 
 	if len(args) != 4 {
-		return nil, errors.New("Error: Incorrect Lenght Of Arguments To See The Usage run: \n\n\t\t'go run . -h'\n")
+		return nil, errors.New("Error: Incorrect Length Of Arguments. To See The Usage run: \n\n\t\t'go run . -h'\n")
 	}
 
 	TrainNumber, isValid := validateCoordinate(args[3])

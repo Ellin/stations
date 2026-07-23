@@ -48,11 +48,18 @@ func TestParseStations(t *testing.T) {
 			errorString: "Invalid station name in line #3: &green_belt\n",
 		},
 		{
-			name:        "Malformed Station Coordinates",
+			name:        "Malformed Station Coordinates: Not an integer",
 			lines:       []string{"jungle,1,3", "green_belt,2.5,4", "village,4,3", "mountain,5,6", "treetop,6,4", "grasslands,3,6", "suburbs,4,6", "clouds,6,5", "wetlands,7,4", "farms,3,5", "downtown,5,4", "metropolis,7,8", "industrial,8,6", "desert,9,9"},
 			linenum:     1,
 			wantError:   true,
 			errorString: "Invalid coordinates at station green_belt in line #3: 2.5, 4\n",
+		},
+		{
+			name:        "Malformed Station Coordinates: Negative integer",
+			lines:       []string{"jungle,1,3", "green_belt,-1,4", "village,4,3", "mountain,5,6", "treetop,6,4", "grasslands,3,6", "suburbs,4,6", "clouds,6,5", "wetlands,7,4", "farms,3,5", "downtown,5,4", "metropolis,7,8", "industrial,8,6", "desert,9,9"},
+			linenum:     1,
+			wantError:   true,
+			errorString: "Invalid coordinates at station green_belt in line #3: -1, 4\n",
 		},
 		{
 			name:        "Duplicate Station Coordinates",
