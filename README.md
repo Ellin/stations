@@ -12,15 +12,15 @@ or with a ssh: <br>
 navigate to the project with:
 `cd pathfinder`
 
-Then run for Edmond Karp algorithm
-`go run . [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]`  <br>
+Then run for Edmond Karp algorithm <br>
+`go run . [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]` 
 
 
-or  for Dinic algorithm
-`go run . -alg Dinic [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]` <br>
+or  for Dinic algorithm <br>
+`go run . -alg Dinic [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]`
 
 
-running Uning Test:
+running Uning Test: <br>
 `cd unitTest` then run `go Test`
 
 
