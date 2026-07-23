@@ -52,6 +52,6 @@ func createPath(parents map[StationName]StationName, end StationName) []StationN
 
 	slices.Reverse(path)
 
-	fmt.Println("Found path:", path)
+	// fmt.Println("Found path:", path)
 	return path
 }

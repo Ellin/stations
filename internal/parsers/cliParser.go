@@ -12,6 +12,8 @@ import (
 // this function returns ArgsInfo struct  and error if any of the argument are not valid
 func ParseArgs() (*model.ArgsInfo, error) {
 	var argList model.ArgsInfo // this stores the argument from the cli
+
+	algo := flag.String("alg", "EdmondsKarp", "Use flag -alg to use dinic Algorithm.")
 	flag.Usage = func() {
 		fmt.Println("Usage: go run . [path to file containing network map] [start station] [end station] [number of trains]")
 		fmt.Println()
@@ -20,6 +22,7 @@ func ParseArgs() (*model.ArgsInfo, error) {
 		fmt.Println()
 		fmt.Println("Examples:")
 		fmt.Println(`  go run . network/map2.map tempere helsinki 10`)
+		fmt.Println(`  go run . -alg Dinic network/map2.map tempere helsinki 10`)
 		fmt.Println(`  go run . network/map2.map hanko kokkola 20`)
 	}
 
@@ -47,9 +50,16 @@ func ParseArgs() (*model.ArgsInfo, error) {
 		return nil, fmt.Errorf("Error: Invalid Train Number %s.\n", args[3])
 	}
 
+	// if TrainNumber > 150000 {
+	// 	return nil, fmt.Errorf("Error: Invalid Train Numbers %s The Train Number Exceeded The Maximum Number Of Permitted Trains 150000.\n", args[3])
+	// }
+	if TrainNumber == 0 {
+		return nil, nil
+	}
 	argList.MapFile = args[0]
 	argList.StartStation = startStation
 	argList.EndStation = endStation
+	argList.Algo = *algo
 	argList.TrainCount = TrainNumber
 
 	return &argList, nil
