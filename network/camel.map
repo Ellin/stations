@@ -1,0 +1,22 @@
+stations:
+a, 1,1
+b, 2,2
+c, 4,4
+d, 5,5
+e, 6,6
+f, 7,7
+g, 8,8
+
+
+connections:
+a-b
+b-c
+c-d 
+d-g 
+a-e 
+e-c 
+c-f 
+f-g 
+
+
+# MAX FLOW IS due to bottleneck at c
