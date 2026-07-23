@@ -13,7 +13,8 @@ type Graph struct {
 	VertexNameMap map[StationName]int
 	LeveL         []int // use this array to make the level graph is seprates the nodes into tree like form
 	// it stores the distance bw current node and source
-	DeadEnd []bool
+	EdgeBook []int // keep record of the current neighbor edge so we dont keep checking the same edge each loop
+	DeadEnd  []bool
 }
 
 type Edge struct {
@@ -44,6 +45,7 @@ func (g *Graph) CreateVertexMaps(nd model.NetworkData) {
 	}
 	g.LeveL = make([]int, len(g.VertexIDMap))
 	g.DeadEnd = make([]bool, len(g.VertexIDMap))
+	g.EdgeBook = make([]int, len(g.VertexIDMap))
 }
 
 // Given edge A->B, create an edge from A->B and also a corresponding reverse edge B->A with cap: 0
