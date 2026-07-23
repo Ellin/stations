@@ -1,0 +1,36 @@
+stations:
+a, 1,1
+b, 2,2
+c, 4,4
+d, 5,5
+e, 6,6
+f, 7,7
+g, 8,8
+h,9,9
+i,0,1
+j,0,2
+k,0,3
+l,0,4
+
+z, 0,100
+
+
+connections:
+a-b
+b-c 
+c-d 
+d-e 
+e-f 
+f-g
+g-h 
+h-i 
+i-j 
+j-k 
+k-l 
+l-z
+
+a-z
+
+
+# a to z
+#max flow: 2

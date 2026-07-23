@@ -1,0 +1,12 @@
+stations:
+a, 1,1
+b, 2,2
+
+y, 0,3
+z, 3,3
+
+connections:
+a-b
+y-z
+
+# no path from a to z

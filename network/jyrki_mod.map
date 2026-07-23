@@ -1,0 +1,46 @@
+stations:
+a, 1,1
+b, 2,2
+c, 4,4
+d, 5,5
+e, 6,6
+f, 7,7
+g, 8,8
+h,9,9
+
+i,0,1
+j,0,2
+k,0,3
+l,0,4
+
+
+connections:
+a-b
+a-g
+b-e 
+b-c 
+e-f
+f-d
+c-d
+g-h
+h-c
+
+#sidepath
+a-i
+i-j
+j-k
+k-l
+l-d
+
+# a to d
+# shortest: a-b-c-d
+
+# flow 2:
+# a-b-c-d AND a-i-j-k-l-d
+# OR
+# a-b-e-f-d AND a-g-h-c-d
+
+# flow 3:
+# a-b-e-f-d
+# a-g-h-c-d
+# a-i-j-k-l-d
