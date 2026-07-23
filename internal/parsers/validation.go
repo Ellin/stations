@@ -13,7 +13,7 @@ import (
 // validateStationName returns true if the station name meets the following criteria:
 // Comprised of lower-case letters, numbers and underscores (_) only. No special characters or other punctuation are allowed.
 func validateStationName(name string) bool {
-	if name == "" {
+	if name == "" || len(name) > 100 {
 		return false
 	}
 

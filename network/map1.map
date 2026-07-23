@@ -7,9 +7,14 @@ victoria,6,7
 euston,11,23
 st_pancras,5,15 # international
 
+# no connection with start waterloo
+germany, 1,6
+austria, 3,7
 
 connections:
 waterloo-victoria
 waterloo-euston
 st_pancras-euston
 victoria-st_pancras
+
+germany-austria

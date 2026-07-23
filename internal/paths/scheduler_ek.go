@@ -25,8 +25,8 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 		if pathSet, err = g.FindPathSet(start, end, numTrains); err != nil {
 			return err
 		}
-	case "DinicAlg":
-		if pathSet, err = g.DinicAlg(start, end); err != nil {
+	case "Dinic":
+		if pathSet, err = g.DinicAlg(start, end, numTrains); err != nil {
 			return err
 		}
 		fmt.Println("PATH SET FOUND")
@@ -47,7 +47,7 @@ func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]
 	maxFlow, pathSets := g.EdmondsKarp(start, end, numTrains)
 
 	if maxFlow == 0 {
-		return nil, fmt.Errorf("No path from start to end stations")
+		return nil, fmt.Errorf("Error: No Path From Start To End Stations")
 	}
 
 	var bestSetIndex int
@@ -178,12 +178,12 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 			}
 
 		}
-		
+
 		turnSchedule = append(turnSchedule, turnGroup)
 	}
 
 	turnSchedule = turnSchedule[:len(turnSchedule)-1] // Remove last empty turnGroup
-	
+
 	return turnSchedule
 }
 

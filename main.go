@@ -14,6 +14,9 @@ func main() {
 	arg, argumentsErr := parsers.ParseArgs()
 	close(argumentsErr)
 
+	if arg == nil {
+		return
+	}
 	// fmt.Println("returned str arg:", arg, err)
 	// extract the text from map file using arg.MapFile where the file name is stored
 	fileText, err := ReadFile(arg.MapFile)
@@ -35,22 +38,14 @@ func main() {
 	// graph.PrintGraph(networkData)
 	// fmt.Println("\n\n", graph)
 
-	// paths, err := graph.DinicAlg(arg.StartStation, arg.EndStation)
-	// close(err)
+	fmt.Println(arg.Algo, " Algorith")
+	start := time.Now()
 
-	// for _, p := range paths {
-	// 	fmt.Println("\n\n> path: ", p)
-	// }
-
-	//graph.PrintGraph(networkData)
-
-	// graph.EdmondsKarp(arg.StartStation, arg.EndStation, arg.TrainCount)
-
-	alg1 := "EdmondsKarp"
-	alg2 := "DinicAlg"
-	fmt.Println(alg1, alg2)
-	Schedulererr := graph.RunScheduler(arg.StartStation, arg.EndStation, alg2, arg.TrainCount)
+	Schedulererr := graph.RunScheduler(arg.StartStation, arg.EndStation, arg.Algo, arg.TrainCount)
 	close(Schedulererr)
+
+	fmt.Printf("\033[32mExecution Time: %v \033[0m\n", time.Since(start))
+
 }
 
 // exit progremm with 1 if argument err is not nil
@@ -59,10 +54,4 @@ func close(err error) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-}
-
-func timer(alg func()) {
-	start := time.Now()
-	alg()
-	fmt.Printf("\033[32m Execution Time: %v \033[0m\n", time.Since(start))
 }
