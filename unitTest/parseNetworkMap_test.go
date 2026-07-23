@@ -1,11 +1,28 @@
 package unitTest
 
 import (
+	"fmt"
 	"pathinder/internal/parsers"
 	"pathinder/model"
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 )
+
+// createStationLines creates only the stations section of a network map with some specified number of stations
+func createStationLines(numStations int) string {
+	var builder strings.Builder
+	builder.Grow(numStations * 10) // expect each output line to be around 10 ASCII characters (10 bytes)
+
+	builder.WriteString("stations:\n")
+
+	for i := 0; i < numStations; i++ {
+		fmt.Fprintf(&builder, "%v, %v, %v\n", strconv.Itoa(i), 0, i)
+	}
+
+	return builder.String()
+}
 
 func TestParseNetworkMap(t *testing.T) {
 	londonMapText := `stations:
@@ -96,6 +113,13 @@ waterloo  , 3 , 1
 victoria,6,7
 
 victoria-waterloo`,
+			wantError:      true,
+			wantStationMap: nil,
+			wantNetworkMap: nil,
+		},
+		{
+			name:           "Over 10k stations",
+			mapText:        createStationLines(10001),
 			wantError:      true,
 			wantStationMap: nil,
 			wantNetworkMap: nil,
