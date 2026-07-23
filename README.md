@@ -3,30 +3,29 @@ A cli path-finding algorithm, that find the most efficient paths to move trains 
 
 ## Setup and Usage <br>
 
-clone the repository with https:
+clone the repository with https: <br>
 `git clone https://gitea.kood.tech/aliadaahirmohamed/pathfinder.git`
 
-or with a ssh:
+or with a ssh: <br>
 `git clone git@gitea.kood.tech:aliadaahirmohamed/pathfinder.git`
 
 navigate to the project with:
 `cd pathfinder`
 
-Then run 
+Then run for Edmond Karp algorithm
+`go run . [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]`  <br>
 
-`go run . [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]` for Edmond Karp algorithm
 
-or
-
-`go run . -alg Dinic [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]` for Dinic algorithm
+or  for Dinic algorithm
+`go run . -alg Dinic [INPUTFILEPATH] [STARTSTATION] [ENDSTATION] [TRAINNUMBER]` <br>
 
 
 running Uning Test:
-
 `cd unitTest` then run `go Test`
 
 
-### Proposed bonuses:
+
+## Proposed bonuses:
 
 1. implemented advanced Error handling.
 
@@ -37,10 +36,10 @@ running Uning Test:
 5. Unit Testing implemented for each major functions.
 
 
-### Algorithms used
+## Algorithms used
 - Edmonds Karp for the defoult path routing
 - Dinic accessible through the `-alg Dinic flag`
 
-## Authors
+# Authors
 
 Ellin and Alia
