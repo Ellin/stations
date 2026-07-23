@@ -22,18 +22,20 @@ func (g *Graph) DFSAlg(dfsFlow bool, start, end string) (int, []parsers.StationN
 			slices.Reverse(route)
 		}
 	} else {
-		flow = g.dfs(flow, startID, endID)
+		route, flow = g.dfs(flow, startID, endID)
+		slices.Reverse(route)
 	}
 
 	return flow, route
 }
 
-func (g *Graph) dfs(flow int, current, end int) int {
+func (g *Graph) dfs(flow int, current, end int) ([]parsers.StationName, int) {
 	// fmt.Println("in dfs", g.EKGraph[current])
 	// of the start and end are same the path is found return the path slice and the flow count
 
 	if current == end {
-		return flow
+		return []parsers.StationName{g.VertexIDMap[current]}, flow
+		// return flow
 	}
 
 	for i := range g.EKGraph[current] { // loop around the neighbor of the current vertex
@@ -46,13 +48,14 @@ func (g *Graph) dfs(flow int, current, end int) int {
 		if g.LeveL[current] < g.LeveL[e.To] && e.Cap > 0 { // it checks if the neighbor edge is one level deeper(current vertex is alway higher in the level graph) and there is still a cap remaining for the edge
 			minCp := math.Min(float64(flow), float64(e.Cap)) // in this implementaion the flow and cap are always the same if cap is greater than 0 meaning its 1 then flow is also one but to be true to algorithm we are doing this part as well
 
-			flowReturn := g.dfs(int(minCp), e.To, end) // call the dfs again this time the neighbor vertex as the source
+			path, flowReturn := g.dfs(int(minCp), e.To, end) // call the dfs again this time the neighbor vertex as the source
 
 			if flowReturn > 0 { // if path found in the previous update the cap
 				e.Cap -= flowReturn
 				g.EKGraph[e.To][e.Rev].Cap += flowReturn
 
-				return flowReturn
+				return append(path, g.VertexIDMap[current]), flowReturn
+				// return flowReturn
 			}
 		}
 
@@ -60,7 +63,7 @@ func (g *Graph) dfs(flow int, current, end int) int {
 	// if the flow returned is 0 or there is no neighbors there no path from this node
 	// so set it to deadEnd so it doesnt maroon the search
 	g.DeadEnd[current] = true
-	return 0
+	return []parsers.StationName{}, 0
 }
 
 // we construct the path with same step as we used in the max flow dfs function

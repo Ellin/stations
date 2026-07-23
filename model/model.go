@@ -6,6 +6,7 @@ type ArgsInfo struct {
 	StartStation string
 	EndStation   string
 	TrainCount   int
+	Algo         string
 	CliCom       string
 }
 
