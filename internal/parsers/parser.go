@@ -55,13 +55,11 @@ func ParseNetworkMap(text string) (model.NetworkData, error) {
 	}
 	stationMap, err1 := ParseStations(stationsBuffer, stationLineNum)
 	if err1 != nil {
-		fmt.Println(err1)
 		return model.NetworkData{}, err1
 	}
 	// fmt.Println("stations map", stationMap)
 	networkMap, err2 := ParseConnections(connectionsBuffer, connectionsLineNum, stationMap)
 	if err2 != nil {
-		fmt.Println(err2)
 		return model.NetworkData{}, err2
 	}
 
@@ -121,12 +119,20 @@ func ParseStations(lines []string, lineNum int) (map[StationName]model.Station, 
 				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum+i+1))
 				continue
 			}
+
+			if len(stationMap) >= 10000 {
+				errs = append(errs, fmt.Errorf("Too many stations in network map. Maximum limit is 10k stations.\n"))
+				return nil, errors.Join(errs...)
+			}
 			stationMap[name] = model.Station{Name: name, X: xInt, Y: yInt}
 		}
 	}
 
-	// fmt.Printf("Valid stations:\n%v\n", stationMap)
-	return stationMap, errors.Join(errs...)
+	if errs != nil {
+		return nil, errors.Join(errs...)
+	}
+
+	return stationMap, nil
 }
 
 // parseConnections parses the connections section of the network map and creates a connections map linking all connected stations
@@ -194,7 +200,10 @@ func ParseConnections(lines []string, lineNum int, stationMap map[StationName]mo
 	}
 
 	// fmt.Printf("\nConnections map:\n%v\n\n", connectionsMap)
-	return connectionsMap, errors.Join(errs...)
+	if errs != nil {
+		return nil, errors.Join(errs...)
+	}
+	return connectionsMap, nil
 }
 
 // trimSpaceSlice applies strings.TrimSpace on each string in []string
