@@ -39,7 +39,7 @@ func validateCoordinate(c string) (int, bool) {
 }
 
 // validateTrainNum returns the coordinate as an int and true if valid
-// Coordinate must be a positive integer
+// Number of trains must be a positive integer
 func validateTrainNum(c string) (int, bool) {
 	num, err := strconv.Atoi(c)
 
