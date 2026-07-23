@@ -27,6 +27,28 @@ func TestParseArgs(t *testing.T) {
 			want:    "waterloo st_pancras 3",
 		},
 		{
+			name: "Negative train number",
+			args: []string{
+				"../network/london_network.map",
+				"waterloo",
+				"st_pancras",
+				"-1",
+			},
+			wantErr: true,
+			want:    "Error: Invalid Train Number -1. Must be a positive integer.\n",
+		},
+		{
+			name: "Zero train number",
+			args: []string{
+				"../network/london_network.map",
+				"waterloo",
+				"st_pancras",
+				"0",
+			},
+			wantErr: true,
+			want:    "Error: Invalid Train Number 0. Must be a positive integer.\n",
+		},
+		{
 			name: "Insufficient arguments",
 			args: []string{
 				"../network/london_network.map",

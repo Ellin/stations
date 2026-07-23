@@ -34,7 +34,7 @@ func ParseArgs() (*model.ArgsInfo, error) {
 		return nil, errors.New("Error: Incorrect Length Of Arguments. To See The Usage run: \n\n\t\t'go run . -h'\n")
 	}
 
-	TrainNumber, isValid := validateCoordinate(args[3])
+	TrainNumber, isValid := validateTrainNum(args[3])
 	startStation, endStation := strings.ToLower(args[1]), strings.ToLower(args[2])
 
 	if err := validateMapFile(args[0]); err != nil {
@@ -47,7 +47,7 @@ func ParseArgs() (*model.ArgsInfo, error) {
 		return nil, fmt.Errorf("Error: Invalid End Station Name %s.n\n", args[2])
 	}
 	if !isValid {
-		return nil, fmt.Errorf("Error: Invalid Train Number %s.\n", args[3])
+		return nil, fmt.Errorf("Error: Invalid Train Number %s. Must be a positive integer.\n", args[3])
 	}
 
 	// if TrainNumber > 150000 {
