@@ -16,9 +16,9 @@ func TestParseArgs(t *testing.T) {
 		want    string
 	}{
 		{
-			name: "Valid",
+			name: "Valid arguments",
 			args: []string{
-				"../network/map1.map",
+				"../network/london_network.map",
 				"waterloo",
 				"st_pancras",
 				"3",
@@ -27,27 +27,49 @@ func TestParseArgs(t *testing.T) {
 			want:    "waterloo st_pancras 3",
 		},
 		{
-			name: "Insufficient argument",
+			name: "Negative train number",
 			args: []string{
-				"../network/m5.map",
+				"../network/london_network.map",
+				"waterloo",
+				"st_pancras",
+				"-1",
+			},
+			wantErr: true,
+			want:    "Error: Invalid Train Number -1. Must be a positive integer.\n",
+		},
+		{
+			name: "Zero train number",
+			args: []string{
+				"../network/london_network.map",
+				"waterloo",
+				"st_pancras",
+				"0",
+			},
+			wantErr: true,
+			want:    "Error: Invalid Train Number 0. Must be a positive integer.\n",
+		},
+		{
+			name: "Insufficient arguments",
+			args: []string{
+				"../network/london_network.map",
 				"waterloo",
 			},
 			wantErr: true,
-			want:    "Error: Incorrect Lenght Of Arguments To See The Usage run: \n\n\t\t'go run . -h'\n",
+			want:    "Error: Incorrect Length Of Arguments. To See The Usage run: \n\n\t\t'go run . -h'\n",
 		}, {
-			name: "Insufficient argument",
+			name: "Too many arguments",
 			args: []string{
-				"../network/m5.map",
+				"../network/london_network.map",
 				"waterloo",
 				"st_pancras",
 				"3",
 				"4",
 			},
 			wantErr: true,
-			want:    "Error: Incorrect Lenght Of Arguments To See The Usage run: \n\n\t\t'go run . -h'\n",
+			want:    "Error: Incorrect Length Of Arguments. To See The Usage run: \n\n\t\t'go run . -h'\n",
 		},
 		{
-			name: "Notfound map",
+			name: "Non-existent map",
 			args: []string{
 				"../network/notfound.map",
 				"waterloo",

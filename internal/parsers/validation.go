@@ -38,6 +38,18 @@ func validateCoordinate(c string) (int, bool) {
 	return num, true
 }
 
+// validateTrainNum returns the coordinate as an int and true if valid
+// Number of trains must be a positive integer
+func validateTrainNum(c string) (int, bool) {
+	num, err := strconv.Atoi(c)
+
+	if err != nil || num < 1 {
+		return -1, false
+	}
+
+	return num, true
+}
+
 // validateMapFile returns error if file doesn't exist or file extention is not map else it returns nil
 // it takes file name type string
 func validateMapFile(file string) error {
