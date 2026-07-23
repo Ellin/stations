@@ -22,7 +22,9 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 
 	switch alg {
 	case "EdmondsKarp":
-		pathSet = g.FindPathSet(start, end, numTrains)
+		if pathSet, err = g.FindPathSet(start, end, numTrains); err != nil {
+			return err
+		}
 	case "DinicAlg":
 		if pathSet, err = g.DinicAlg(start, end); err != nil {
 			return err
@@ -40,14 +42,46 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 // For example, the current algorithm for choosing a set of paths for 2 trains prefers a set of two very long non-overlapping paths
 // vs one very short path that blocks multiple non-overlapping paths.
 // But that short blocking path may still be the better path for certain number of trains.
-func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) (pathSet [][]parsers.StationName) {
+func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]parsers.StationName, error) {
 
-	flow, realPaths := g.EdmondsKarp(start, end, numTrains)
-	pathSet = realPaths[flow-1]
-	fmt.Println("PATH SET FOUND")
-	fmt.Println(pathSet)
+	maxFlow, pathSets := g.EdmondsKarp(start, end, numTrains)
 
-	return pathSet
+	if maxFlow == 0 {
+		return nil, fmt.Errorf("No path from start to end stations")
+	}
+
+	var bestSetIndex int
+	minTurns := calcAvgTurns(numTrains, pathSets[0])
+
+	for i, pathSet := range pathSets {
+		// find avg # of turns per set
+		avgTurns := calcAvgTurns(numTrains, pathSet)
+
+		if avgTurns < minTurns {
+			minTurns = avgTurns
+			bestSetIndex = i
+		}
+	}
+
+	pathSet := pathSets[bestSetIndex]
+
+	fmt.Printf("\nCHOSEN PATH SET (%d paths):\n%v\n", len(pathSet), pathSet)
+
+	return pathSet, nil
+}
+
+// calcAvgTurns calculate the average number of turns per path in a given pathSet
+func calcAvgTurns(numTrains int, pathSet [][]parsers.StationName) int {
+	var totalHops int
+	for _, path := range pathSet {
+		totalHops += len(path) - 1
+	}
+
+	// average # of turns per path = ((total # of hops across all paths + total # of trains) / # of paths) - 1 turn [since first set of trains doesn't need to wait]
+	// rounding up a/b trick: a + b - 1 / b
+	avgTurns := ((totalHops + numTrains + len(pathSet) - 1) / len(pathSet)) - 1
+
+	return avgTurns
 }
 
 // Decide which train gets assigned to which path
@@ -80,7 +114,7 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 		})
 	}
 
-	fmt.Println(pathMap)
+	//	fmt.Println(pathMap)
 
 	return pathMap
 }
@@ -144,10 +178,12 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 			}
 
 		}
+		
 		turnSchedule = append(turnSchedule, turnGroup)
 	}
-	fmt.Println("TURN SCHEDULE:")
-	fmt.Println(turnSchedule)
+
+	turnSchedule = turnSchedule[:len(turnSchedule)-1] // Remove last empty turnGroup
+	
 	return turnSchedule
 }
 
@@ -161,5 +197,5 @@ func printSchedule(turnSchedule [][]string) {
 		scheduleStr += line + "\n"
 	}
 
-	fmt.Println(scheduleStr)
+	fmt.Printf("\nTURN SCHEDULE (%v turns):\n%s\n", len(turnSchedule), scheduleStr)
 }
