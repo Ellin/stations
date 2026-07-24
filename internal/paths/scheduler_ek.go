@@ -7,6 +7,7 @@ import (
 	"pathinder/internal/parsers"
 	"strconv"
 	"strings"
+	"log"
 )
 
 type Train struct {
@@ -20,10 +21,11 @@ func (g *Graph) RunScheduler(start, end parsers.StationName, alg string, numTrai
 
 	var pathSet [][]parsers.StationName
 	var err error
+	var minTurns int
 
 	switch alg {
 	case "EdmondsKarp":
-		if pathSet, err = g.FindPathSet(start, end, numTrains); err != nil {
+		if pathSet, minTurns, err = g.FindPathSet(start, end, numTrains); err != nil {
 			return err
 		}
 	case "Dinic":
@@ -33,7 +35,7 @@ func (g *Graph) RunScheduler(start, end parsers.StationName, alg string, numTrai
 		// fmt.Println("PATH SET FOUND")
 		// fmt.Println(pathSet)
 	}
-	pathAssignments := divideTrains(numTrains, pathSet)
+	pathAssignments := divideTrains(numTrains, pathSet, minTurns)
 	turnSchedule := runTrains(end, pathSet, pathAssignments)
 	printSchedule(turnSchedule)
 	return nil
@@ -43,16 +45,16 @@ func (g *Graph) RunScheduler(start, end parsers.StationName, alg string, numTrai
 // For example, the current algorithm for choosing a set of paths for 2 trains prefers a set of two very long non-overlapping paths
 // vs one very short path that blocks multiple non-overlapping paths.
 // But that short blocking path may still be the better path for certain number of trains.
-func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]parsers.StationName, error) {
+func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]parsers.StationName, int, error) {
 
 	maxFlow, pathSets := g.EdmondsKarp(start, end, numTrains)
 
 	if maxFlow == 0 {
-		return nil, fmt.Errorf("Error: No Path From Start To End Stations")
+		return nil, 0, fmt.Errorf("Error: No Path From Start To End Stations")
 	}
 
 	var bestSetIndex int
-	minTurns := calcAvgTurns(numTrains, pathSets[0])
+	minTurns := calcAvgTurns(numTrains, pathSets[0]) 
 
 	for i, pathSet := range pathSets {
 		// find avg # of turns per set
@@ -66,9 +68,9 @@ func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]
 
 	pathSet := pathSets[bestSetIndex]
 
-	// fmt.Printf("\nCHOSEN PATH SET (%d paths):\n%v\n", len(pathSet), pathSet)
+	fmt.Printf("\nCHOSEN PATH SET (%d paths):\n%v\n", len(pathSet), pathSet)
 
-	return pathSet, nil
+	return pathSet, minTurns, nil
 }
 
 // calcAvgTurns calculate the average number of turns per path in a given pathSet
@@ -87,39 +89,43 @@ func calcAvgTurns(numTrains int, pathSet [][]parsers.StationName) int {
 
 // Decide which train gets assigned to which path
 // The index of each train group assigned to a path in pathAssignments = index of that path in pathSet
-func divideTrains(numTrains int, pathSet [][]parsers.StationName) (pathAssignments [][]Train) {
+func divideTrains(numTrains int, pathSet [][]parsers.StationName, avgTurns int) (pathAssignments [][]Train) {
 	pathAssignments = make([][]Train, len(pathSet))
+	var lastTrainID int
+	var totalTrainsAssigned int
 
-	for i := 0; i < numTrains; i++ {
+	for pathID, path := range pathSet {
+		numHops := len(path) - 1
 
-		shortestTurnNum := getNumTurns(0, pathSet[0], pathAssignments)
-		shortestPathIndex := 0
+		if numHops <= avgTurns {
+			// The number of trains to add to a path's queue to reach the avg number of turns
+			// uses the same formula for calculating the # of turns for a path, but solving for the number of trains:
+			// # turns for a path = # hops + # trains in queue - 1 wait turn [first train in queue doesn't increase # of turns]
+			// ==> # trains = # turns - # hops + 1
 
-		// Find path with shortest # turns
-		for pathID, path := range pathSet {
-			numTurns := getNumTurns(pathID, path, pathAssignments)
-			if numTurns < shortestTurnNum {
-				shortestTurnNum = numTurns
-				shortestPathIndex = pathID
+			numTrainsToAdd := avgTurns - numHops + 1
+
+			// Add trains
+			for i := 0; i < numTrainsToAdd && totalTrainsAssigned < numTrains; i++ {
+				totalTrainsAssigned++
+
+				pathAssignments[pathID] = append(pathAssignments[pathID], Train{
+					Name:                "T" + strconv.Itoa(i + lastTrainID + 1),
+					PathID:              pathID,
+					CurrentStationIndex: 0,
+					CurrentStationName:  path[0],
+				})
 			}
 		}
-
-		// Schedule train
-		pathAssignments[shortestPathIndex] = append(pathAssignments[shortestPathIndex], Train{
-			Name:                "T" + strconv.Itoa(i+1),
-			PathID:              shortestPathIndex,
-			CurrentStationIndex: 0,
-			CurrentStationName:  pathSet[shortestPathIndex][0],
-		})
+		currentPathTrains := pathAssignments[pathID]
+		lastTrainID += len(currentPathTrains)
 	}
 
+	if totalTrainsAssigned != numTrains {
+		log.Fatalf("Wrong num trains assigned: %d", totalTrainsAssigned)
+	}
 	return pathAssignments
 }
-
-// func divideTrainsImproves(numTrains int, pathSet [][]parsers.StationName) map[int][]Train {
-// 	pathMap := make(map[int][]Train)
-// 	return pathMap
-// }
 
 // getNumTurns returns the number of turns it would take to use a certain path, taking into account the wait time for that path (# of trains already scheduled for that path)
 func getNumTurns(pathID int, path []parsers.StationName, pathAssignments [][]Train) int {
