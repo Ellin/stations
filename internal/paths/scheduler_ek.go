@@ -29,8 +29,8 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 		if pathSet, err = g.DinicAlg(start, end, numTrains); err != nil {
 			return err
 		}
-		fmt.Println("PATH SET FOUND")
-		fmt.Println(pathSet)
+		// fmt.Println("PATH SET FOUND")
+		// fmt.Println(pathSet)
 	}
 	pathMap := divideTrains(numTrains, pathSet)
 	turnSchedule := runTrains(end, pathSet, pathMap)
@@ -65,7 +65,7 @@ func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]
 
 	pathSet := pathSets[bestSetIndex]
 
-	fmt.Printf("\nCHOSEN PATH SET (%d paths):\n%v\n", len(pathSet), pathSet)
+	// fmt.Printf("\nCHOSEN PATH SET (%d paths):\n%v\n", len(pathSet), pathSet)
 
 	return pathSet, nil
 }
@@ -118,6 +118,11 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 
 	return pathMap
 }
+
+// func divideTrainsImproves(numTrains int, pathSet [][]parsers.StationName) map[int][]Train {
+// 	pathMap := make(map[int][]Train)
+// 	return pathMap
+// }
 
 // getNumTurns returns the number of turns it would take to use a certain path, taking into account the wait time for that path (# of trains already scheduled for that path)
 func getNumTurns(pathID int, pathSet [][]parsers.StationName, pathMap map[int][]Train) int {
