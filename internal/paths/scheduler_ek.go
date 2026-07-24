@@ -7,7 +7,6 @@ import (
 	"pathinder/internal/parsers"
 	"strconv"
 	"strings"
-	"log"
 )
 
 type Train struct {
@@ -54,7 +53,7 @@ func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]
 	}
 
 	var bestSetIndex int
-	minTurns := calcAvgTurns(numTrains, pathSets[0]) 
+	minTurns := calcAvgTurns(numTrains, pathSets[0])
 
 	for i, pathSet := range pathSets {
 		// find avg # of turns per set
@@ -87,42 +86,38 @@ func calcAvgTurns(numTrains int, pathSet [][]parsers.StationName) int {
 	return avgTurns
 }
 
-// Decide which train gets assigned to which path
+// divideTrains divides and queues trains for paths in the pathSet
 // The index of each train group assigned to a path in pathAssignments = index of that path in pathSet
 func divideTrains(numTrains int, pathSet [][]parsers.StationName, avgTurns int) (pathAssignments [][]Train) {
 	pathAssignments = make([][]Train, len(pathSet))
-	var lastTrainID int
+
 	var totalTrainsAssigned int
 
 	for pathID, path := range pathSet {
 		numHops := len(path) - 1
 
-		if numHops <= avgTurns {
-			// The number of trains to add to a path's queue to reach the avg number of turns
-			// uses the same formula for calculating the # of turns for a path, but solving for the number of trains:
-			// # turns for a path = # hops + # trains in queue - 1 wait turn [first train in queue doesn't increase # of turns]
-			// ==> # trains = # turns - # hops + 1
-
-			numTrainsToAdd := avgTurns - numHops + 1
-
-			// Add trains
-			for i := 0; i < numTrainsToAdd && totalTrainsAssigned < numTrains; i++ {
-				totalTrainsAssigned++
-
-				pathAssignments[pathID] = append(pathAssignments[pathID], Train{
-					Name:                "T" + strconv.Itoa(i + lastTrainID + 1),
-					PathID:              pathID,
-					CurrentStationIndex: 0,
-					CurrentStationName:  path[0],
-				})
-			}
+		if numHops > avgTurns {
+			continue
 		}
-		currentPathTrains := pathAssignments[pathID]
-		lastTrainID += len(currentPathTrains)
-	}
 
-	if totalTrainsAssigned != numTrains {
-		log.Fatalf("Wrong num trains assigned: %d", totalTrainsAssigned)
+		// The max number of trains to add to a path's queue to reach the avg number of turns
+		// uses the same formula for calculating the # of turns for a path, but solving for the number of trains:
+		// # turns for a path = # hops + # trains in queue - 1 wait turn [first train in queue doesn't increase # of turns]
+		// ==> # trains = # turns - # hops + 1
+
+		maxTrainsToAdd := avgTurns - numHops + 1
+
+		// Add trains
+		for i := 0; i < maxTrainsToAdd && totalTrainsAssigned < numTrains; i++ {
+			totalTrainsAssigned++
+
+			pathAssignments[pathID] = append(pathAssignments[pathID], Train{
+				Name:                "T" + strconv.Itoa(totalTrainsAssigned),
+				PathID:              pathID,
+				CurrentStationIndex: 0,
+				CurrentStationName:  path[0],
+			})
+		}
 	}
 	return pathAssignments
 }
