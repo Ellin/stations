@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"pathinder/internal/parsers"
 	"strconv"
+	"strings"
 )
 
 type Train struct {
@@ -193,14 +194,17 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 }
 
 func printSchedule(turnSchedule [][]string) {
-	var scheduleStr string
+	var builder strings.Builder
+
 	for _, turn := range turnSchedule {
-		var line string
 		for _, train := range turn {
-			line += train + " "
+			builder.WriteString(train)
+			builder.WriteString(" ")
 		}
-		scheduleStr += line + "\n"
+		builder.WriteString("\n")
 	}
+
+	scheduleStr := builder.String()
 
 	fmt.Printf("\nTURN SCHEDULE (%v turns):\n%s\n", len(turnSchedule), scheduleStr)
 }
