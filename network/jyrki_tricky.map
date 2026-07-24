@@ -1,3 +1,9 @@
+# Expected from a to z for 1 train (3 turns) using path: a-c-b-z 
+# Expected from a to z for 5 trains (7 turns) using path: a-c-b-z 
+# Expected from a to z for 20 trains (20 turns) using paths: [[a b1 b2 b3 b4 b5 b6 b7 b8 b z] [a c c1 c2 c3 c4 c5 c6 c7 c8 c9 z]]
+# Expected from a to z for 100 trains (60 turns) using paths: [[a b1 b2 b3 b4 b5 b6 b7 b8 b z] [a c c1 c2 c3 c4 c5 c6 c7 c8 c9 z]]
+
+
 stations:
 a, 1,1
 
@@ -51,4 +57,3 @@ b7-b8
 b8-b
 
 
-# Expected from a to z for 1 train: a-c-b-z
