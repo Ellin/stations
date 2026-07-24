@@ -16,7 +16,7 @@ type Train struct {
 	CurrentStationName  parsers.StationName // e.g. "waterloo"
 }
 
-func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int) error {
+func (g *Graph) RunScheduler(start, end parsers.StationName, alg string, numTrains int) error {
 
 	var pathSet [][]parsers.StationName
 	var err error
