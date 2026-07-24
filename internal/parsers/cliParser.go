@@ -50,9 +50,9 @@ func ParseArgs() (*model.ArgsInfo, error) {
 		return nil, fmt.Errorf("Error: Invalid Train Number %s. Must be a positive integer.\n", args[3])
 	}
 
-	// if TrainNumber > 150000 {
-	// 	return nil, fmt.Errorf("Error: Invalid Train Numbers %s The Train Number Exceeded The Maximum Number Of Permitted Trains 150000.\n", args[3])
-	// }
+	if TrainNumber > 150000 {
+	 	return nil, fmt.Errorf("Error: Invalid Train Numbers %s The Train Number Exceeded The Maximum Number Of Permitted Trains 150000.\n", args[3])
+	 }
 	if TrainNumber == 0 {
 		return nil, nil
 	}
