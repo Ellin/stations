@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"pathinder/internal/parsers"
 	"strconv"
+	"strings"
 )
 
 type Train struct {
@@ -32,8 +33,8 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 		// fmt.Println("PATH SET FOUND")
 		// fmt.Println(pathSet)
 	}
-	pathMap := divideTrains(numTrains, pathSet)
-	turnSchedule := runTrains(end, pathSet, pathMap)
+	pathAssignments := divideTrains(numTrains, pathSet)
+	turnSchedule := runTrains(end, pathSet, pathAssignments)
 	printSchedule(turnSchedule)
 	return nil
 }
@@ -85,20 +86,18 @@ func calcAvgTurns(numTrains int, pathSet [][]parsers.StationName) int {
 }
 
 // Decide which train gets assigned to which path
-func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Train {
-	pathMap := make(map[int][]Train)
-	for i, _ := range pathSet {
-		pathMap[i] = []Train{}
-	}
+// The index of each train group assigned to a path in pathAssignments = index of that path in pathSet
+func divideTrains(numTrains int, pathSet [][]parsers.StationName) (pathAssignments [][]Train) {
+	pathAssignments = make([][]Train, len(pathSet))
 
 	for i := 0; i < numTrains; i++ {
 
-		shortestTurnNum := getNumTurns(0, pathSet, pathMap)
+		shortestTurnNum := getNumTurns(0, pathSet[0], pathAssignments)
 		shortestPathIndex := 0
 
 		// Find path with shortest # turns
-		for pathID, _ := range pathMap {
-			numTurns := getNumTurns(pathID, pathSet, pathMap)
+		for pathID, path := range pathSet {
+			numTurns := getNumTurns(pathID, path, pathAssignments)
 			if numTurns < shortestTurnNum {
 				shortestTurnNum = numTurns
 				shortestPathIndex = pathID
@@ -106,7 +105,7 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 		}
 
 		// Schedule train
-		pathMap[shortestPathIndex] = append(pathMap[shortestPathIndex], Train{
+		pathAssignments[shortestPathIndex] = append(pathAssignments[shortestPathIndex], Train{
 			Name:                "T" + strconv.Itoa(i+1),
 			PathID:              shortestPathIndex,
 			CurrentStationIndex: 0,
@@ -114,9 +113,7 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 		})
 	}
 
-	//	fmt.Println(pathMap)
-
-	return pathMap
+	return pathAssignments
 }
 
 // func divideTrainsImproves(numTrains int, pathSet [][]parsers.StationName) map[int][]Train {
@@ -125,20 +122,26 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) map[int][]Trai
 // }
 
 // getNumTurns returns the number of turns it would take to use a certain path, taking into account the wait time for that path (# of trains already scheduled for that path)
-func getNumTurns(pathID int, pathSet [][]parsers.StationName, pathMap map[int][]Train) int {
-	numHops := len(pathSet[pathID]) - 1 // hops between stations
-	numWait := len(pathMap[pathID]) - 1 // -1 because the first train doesn't need a turn of waiting
+func getNumTurns(pathID int, path []parsers.StationName, pathAssignments [][]Train) int {
+	numHops := len(path) - 1 // hops between stations
+
+	if len(pathAssignments[pathID]) == 0 {
+		return numHops
+	}
+
+	numWait := len(pathAssignments[pathID]) - 1 // -1 because the first train doesn't need a turn of waiting
+
 	return numHops + numWait
 }
 
-func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap map[int][]Train) [][]string {
+func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathAssignments [][]Train) [][]string {
 	var turnSchedule [][]string // e.g. [["T1-a", "T2-b"]["T1-c", "T2-d"]["T1-end","T2-end"]]
 
 	// Path index 0 = shortest path in a pathSet
 	// The shortest path in a pathSet will always have the most number of trains scheduled for it
 
 	// While there are trains left to move
-	for len(pathMap[0]) > 0 {
+	for len(pathAssignments[0]) > 0 {
 		var turnGroup []string
 
 		// MOVE ALL TRAINS IN LINE FOR ALL PATHS TO THE NEXT STATION IF NOT MOVING AT SAME STATION TO THE ONE AHEAD
@@ -147,11 +150,11 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 
 			var canMove bool
 
-			for i := 0; i < len(pathMap[pathID]); i++ {
-				train := &pathMap[pathID][i]
+			for i := 0; i < len(pathAssignments[pathID]); i++ {
+				train := &pathAssignments[pathID][i]
 
 				if train.CurrentStationName == end {
-					pathMap[pathID] = pathMap[pathID][1:] // dequeue train
+					pathAssignments[pathID] = pathAssignments[pathID][1:] // dequeue train
 					i--
 					continue
 				}
@@ -164,7 +167,7 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 
 				//	IF NOT FIRST IN LINE, CHECK FIRST IF IT CAN MOVE FORWARD
 				if i > 0 {
-					prevStation := &pathMap[pathID][i-1]
+					prevStation := &pathAssignments[pathID][i-1]
 					if path[train.CurrentStationIndex+1] != prevStation.CurrentStationName { // check if train in queue would be moving to the same station as the train ahead
 						canMove = true
 					} else {
@@ -193,14 +196,17 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathMap
 }
 
 func printSchedule(turnSchedule [][]string) {
-	var scheduleStr string
+	var builder strings.Builder
+
 	for _, turn := range turnSchedule {
-		var line string
 		for _, train := range turn {
-			line += train + " "
+			builder.WriteString(train)
+			builder.WriteString(" ")
 		}
-		scheduleStr += line + "\n"
+		builder.WriteString("\n")
 	}
+
+	scheduleStr := builder.String()
 
 	fmt.Printf("\nTURN SCHEDULE (%v turns):\n%s\n", len(turnSchedule), scheduleStr)
 }
