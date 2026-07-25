@@ -145,7 +145,7 @@ func (g *Graph) prettifyPaths(realPaths [][][]VertexID) (realStationPaths [][][]
 		}
 		realStationPaths = append(realStationPaths, convertedPathSet)
 	}
-	fmt.Println("PRETTY", realStationPaths)
+	fmt.Println("Path sets found:", realStationPaths)
 	return realStationPaths
 }
 
