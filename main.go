@@ -38,13 +38,19 @@ func main() {
 	// graph.PrintGraph(networkData)
 	// fmt.Println("\n\n", graph)
 
-	fmt.Println(arg.Algo, " Algorith")
+	
 	start := time.Now()
 
 	Schedulererr := graph.RunScheduler(arg.StartStation, arg.EndStation, arg.Algo, arg.TrainCount)
 	close(Schedulererr)
 
-	fmt.Printf("\033[32mExecution Time: %v \033[0m\n", time.Since(start))
+	// Print algorithm results and performance
+	const (
+		reset = "\033[0m"
+		green = "\033[32m"
+	)
+	fmt.Printf(green + "Execution Time: %v\n" + reset, time.Since(start))
+	fmt.Println("Algorithm used:", arg.Algo)
 
 }
 

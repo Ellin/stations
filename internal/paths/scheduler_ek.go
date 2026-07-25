@@ -30,12 +30,12 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 		if pathSet, err = g.DinicAlg(start, end, numTrains); err != nil {
 			return err
 		}
-		// fmt.Println("PATH SET FOUND")
-		// fmt.Println(pathSet)
 	}
 	pathAssignments := divideTrains(numTrains, pathSet)
 	turnSchedule := runTrains(end, pathSet, pathAssignments)
 	printSchedule(turnSchedule)
+	fmt.Println("Trains scheduled successfully!")
+	fmt.Printf("%d turns to move %d trains from %s to %s using the path set of %d non-overlapping paths:\n%v\n\n", len(turnSchedule), numTrains, start, end, len(pathSet), pathSet)
 	return nil
 }
 
