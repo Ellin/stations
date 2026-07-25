@@ -23,7 +23,7 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 
 	switch alg {
 	case "EdmondsKarp":
-		if pathSet, err = g.FindPathSet(start, end, numTrains); err != nil {
+		if pathSet, err = g.findPathSet(start, end, numTrains); err != nil {
 			return err
 		}
 	case "Dinic":
@@ -39,11 +39,13 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 	return nil
 }
 
-// ! NOTE: This should be further optimized to take into account cost given some # of trains, not just max flow
-// For example, the current algorithm for choosing a set of paths for 2 trains prefers a set of two very long non-overlapping paths
-// vs one very short path that blocks multiple non-overlapping paths.
-// But that short blocking path may still be the better path for certain number of trains.
-func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]parsers.StationName, error) {
+
+// findPathSet first runs the Edmonds Karp algorithm to find multiple sets of non-overlapping paths. 
+// From the set of path sets, it returns the path set with the lowest average number of turns per path.
+// In this way, the cost (# of turns) is taken into account, as by itself, Edmonds Karp is only concerned about maximum flow.
+// Without taking into account the cost, choosing a path set only based on higher flow (more non-overlapping paths, possibly much longer) may result in
+// more turns than necessary for certain number of trains.
+func (g *Graph) findPathSet(start, end parsers.StationName, numTrains int) ([][]parsers.StationName, error) {
 
 	maxFlow, pathSets := g.EdmondsKarp(start, end, numTrains)
 
@@ -66,8 +68,6 @@ func (g *Graph) FindPathSet(start, end parsers.StationName, numTrains int) ([][]
 
 	pathSet := pathSets[bestSetIndex]
 
-	// fmt.Printf("\nCHOSEN PATH SET (%d paths):\n%v\n", len(pathSet), pathSet)
-
 	return pathSet, nil
 }
 
@@ -85,7 +85,8 @@ func calcAvgTurns(numTrains int, pathSet [][]parsers.StationName) int {
 	return avgTurns
 }
 
-// Decide which train gets assigned to which path
+// divideTrains decides which train gets assigned to which path by repeatedly finding the shortest
+// path in the given pathSet and assigning the train to the shortest path
 // The index of each train group assigned to a path in pathAssignments = index of that path in pathSet
 func divideTrains(numTrains int, pathSet [][]parsers.StationName) (pathAssignments [][]Train) {
 	pathAssignments = make([][]Train, len(pathSet))
@@ -116,11 +117,6 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) (pathAssignmen
 	return pathAssignments
 }
 
-// func divideTrainsImproves(numTrains int, pathSet [][]parsers.StationName) map[int][]Train {
-// 	pathMap := make(map[int][]Train)
-// 	return pathMap
-// }
-
 // getNumTurns returns the number of turns it would take to use a certain path, taking into account the wait time for that path (# of trains already scheduled for that path)
 func getNumTurns(pathID int, path []parsers.StationName, pathAssignments [][]Train) int {
 	numHops := len(path) - 1 // hops between stations
@@ -134,6 +130,8 @@ func getNumTurns(pathID int, path []parsers.StationName, pathAssignments [][]Tra
 	return numHops + numWait
 }
 
+// runTrains moves all scheduled trains forward to the next station (if possible), starting from the train first in queue for a path.
+// All trains that were able to move are put in the same turn group before looping again through all the train groups.
 func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathAssignments [][]Train) [][]string {
 	var turnSchedule [][]string // e.g. [["T1-a", "T2-b"]["T1-c", "T2-d"]["T1-end","T2-end"]]
 
@@ -144,10 +142,8 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathAss
 	for len(pathAssignments[0]) > 0 {
 		var turnGroup []string
 
-		// MOVE ALL TRAINS IN LINE FOR ALL PATHS TO THE NEXT STATION IF NOT MOVING AT SAME STATION TO THE ONE AHEAD
-		// IF STATION IS REACHED, DEQUEUE THAT TRAIN
+		// Move all trains in line for all paths to the next station if possible. If station is reached, dequeue that train.
 		for pathID, path := range pathSet {
-
 			var canMove bool
 
 			for i := 0; i < len(pathAssignments[pathID]); i++ {
@@ -159,13 +155,12 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathAss
 					continue
 				}
 
-				// ALL TRAINS FIRST IN LINE CAN MOVE ONE STATION FORWARD
+				// All trains first in line can move one station forward
 				if i == 0 {
 					canMove = true
-
 				}
 
-				//	IF NOT FIRST IN LINE, CHECK FIRST IF IT CAN MOVE FORWARD
+				//	If not first in line, check first if it can move forward
 				if i > 0 {
 					prevStation := &pathAssignments[pathID][i-1]
 					if path[train.CurrentStationIndex+1] != prevStation.CurrentStationName { // check if train in queue would be moving to the same station as the train ahead
@@ -184,7 +179,6 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathAss
 					break
 				}
 			}
-
 		}
 
 		turnSchedule = append(turnSchedule, turnGroup)
