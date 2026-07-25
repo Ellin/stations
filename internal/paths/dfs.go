@@ -10,34 +10,35 @@ import (
 func (g *Graph) DFSAlg(dfsFlow bool, start, end string) (int, []parsers.StationName) {
 
 	var route []parsers.StationName
-	flow := 1
-	startID := g.VertexNameMap[start]
-	endID := g.VertexNameMap[end]
+	startID, endID := g.VertexNameMap[start], g.VertexNameMap[end]
+	flow := 1 // the flow for each station is alway 1 so we initialize it with 1
 
-	// call the dfs algorithm with initail flow 1 and source and sink node id
-
-	if dfsFlow { // after we find the paths we need to remove blocking vertices
+	if dfsFlow {
+		// after we find the paths we need to remove blocking vertices
 		//dfsFlowCorrection is same as the normal dfs functions one diffrence is uses the reverse cap as the capacity
 		if route, flow = g.dfsFlowCorrection(flow, startID, endID); len(route) != 0 {
 			slices.Reverse(route)
 		}
 	} else {
+		// call the dfs algorithm with initail flow 1 and source and sink node id
 		route, flow = g.dfs(flow, startID, endID)
-		slices.Reverse(route)
+		slices.Reverse(route) // reverse the paths retuned as they are currently in reverse
 	}
 
 	return flow, route
 }
 
 func (g *Graph) dfs(flow int, current, end int) ([]parsers.StationName, int) {
-	// fmt.Println("in dfs", g.EKGraph[current])
-	// of the start and end are same the path is found return the path slice and the flow count
 
+	// if the start and end are same the path is found return the path slice and the flow count
 	if current == end {
 		return []parsers.StationName{g.VertexIDMap[current]}, flow
 		// return flow
 	}
 
+	// g.EdgeBook is used to book keep the current edge of the parent
+	// if we have parent A connected to 1000,
+	// if we already check 998 we dont want to go throung the whole neighbors again and  edge book should give you the id to the 999 edge
 	for i := g.EdgeBook[current]; i < len(g.EKGraph[current]); i++ { // loop around the neighbor of the current vertex
 		g.EdgeBook[current] = i
 		e := &g.EKGraph[current][i]
@@ -56,8 +57,10 @@ func (g *Graph) dfs(flow int, current, end int) ([]parsers.StationName, int) {
 				e.Cap -= flowReturn
 				g.EKGraph[e.To][e.Rev].Cap += flowReturn
 
+				if len(path) > 0 && path[len(path)-1] == g.VertexIDMap[current] { // skip for the split node
+					return path, flowReturn
+				}
 				return append(path, g.VertexIDMap[current]), flowReturn
-				// return flowReturn
 			}
 		}
 
@@ -72,9 +75,8 @@ func (g *Graph) dfs(flow int, current, end int) ([]parsers.StationName, int) {
 // it does a normal dfs pathfinding algorithm and check if the neighbors split edge has been used to backtrack if so it ignores that path
 // since it a blocking edge eg*( a - b. b - c, the we back track using the edge c - b ) if this is cound on edge c then we skip that neighbor
 func (g *Graph) dfsFlowCorrection(flow int, current, end int) ([]parsers.StationName, int) {
-	// fmt.Println("in dfs", g.EKGraph[current])
-	// of the start and end are same the path is found return the path slice and the flow count
 
+	// if the start and end are same the path is found return the path slice and the flow count
 	if current == end {
 		return []parsers.StationName{g.VertexIDMap[current]}, flow
 	}
@@ -95,9 +97,11 @@ func (g *Graph) dfsFlowCorrection(flow int, current, end int) ([]parsers.Station
 			path, flowReturn := g.dfsFlowCorrection(int(minCp), e.To, end) // call the dfs again this time the neighbor vertex as the source
 
 			if flowReturn > 0 { // if path found in the previous update the cap
-				e.Cap += flowReturn                      // we reset the e.cap backto its original capacity
-				g.EKGraph[e.To][e.Rev].Cap -= flowReturn // we reset the e.reverse.cap backto its original capacity
-
+				e.Cap += flowReturn                                               // we reset the e.cap backto its original capacity
+				g.EKGraph[e.To][e.Rev].Cap -= flowReturn                          // we reset the e.reverse.cap backto its original capacity
+				if len(path) > 0 && path[len(path)-1] == g.VertexIDMap[current] { // skip for the split node
+					return path, flowReturn
+				}
 				return append(path, g.VertexIDMap[current]), flowReturn
 			}
 
