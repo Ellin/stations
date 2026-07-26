@@ -187,7 +187,10 @@ func runTrains(end parsers.StationName, pathSet [][]parsers.StationName, pathAss
 		turnSchedule = append(turnSchedule, turnGroup)
 	}
 
-	turnSchedule = turnSchedule[:len(turnSchedule)-1] // Remove last empty turnGroup
+	// Check if last turn group is empty
+	if len(turnSchedule[len(turnSchedule)-1]) < 1 {
+		turnSchedule = turnSchedule[:len(turnSchedule)-1] // Remove last empty turnGroup
+	}
 
 	return turnSchedule
 }
