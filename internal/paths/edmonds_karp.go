@@ -82,7 +82,7 @@ func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) ([
 		forward.Cap--
 		reverse.Cap++
 
-		// Check if reverse edge was used -> if yes, previous augmented path found was blocking and the current augmented path will result finding more than 1 different "real path"
+		// Check if reverse edge was used -> if yes, previous augmented path found was blocking and real path extraction will result in different path choices
 		if !forward.Real {
 			isPreviousBlocking = true
 		}
@@ -111,6 +111,8 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxF
 		augmentingPaths = append(augmentingPaths,augmentingPath)
 		maxFlow++
 
+		// Run BFS for extracting real paths only if the newest augmenting path found contains a reverse edge (meaning a path in the previous path set blocked flow and would not be found in the new path set with more flow)
+		// Otherwise, the augmenting path is a real path that doesn't overlap with any other paths in the current path set. 
 		if isPreviousBlocking {
 			realPaths = append(realPaths, currentPathSet)
 
@@ -118,14 +120,14 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxF
 			// Run BFS maxFlow amount of times as we know maxFlow == # of non-overlapping paths that can be found
 			usedMap := make(map[VertexID]map[VertexID]struct{})
 			var foundPath []VertexID
-			var flowPathSet [][]VertexID
+			var realPathSet [][]VertexID
 			for i := maxFlow; i > 0; i-- {
 				parents_real, _ := g.Bfs("real", startID, endID, usedMap)
 				foundPath = g.traceRealPath(parents_real, usedMap, startID, endID)
-				flowPathSet = append(flowPathSet, foundPath)
+				realPathSet = append(realPathSet, foundPath)
 			}
 			
-			currentPathSet = flowPathSet
+			currentPathSet = realPathSet
 		} else {
 			currentPathSet = append(currentPathSet, augmentingPath)
 		}
