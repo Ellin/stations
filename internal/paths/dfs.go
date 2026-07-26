@@ -1,8 +1,6 @@
 package paths
 
 import (
-	// "fmt"
-
 	"pathinder/internal/parsers"
 	"slices"
 )
@@ -15,7 +13,7 @@ func (g *Graph) DFSAlg(dfsFlow bool, start, end string) (int, []parsers.StationN
 
 	if dfsFlow {
 		// after we find the paths we need to remove blocking vertices
-		//dfsFlowCorrection is same as the normal dfs functions one diffrence is uses the reverse cap as the capacity
+		//dfsFlowCorrection is same as the normal dfs functions one diffrence is uses the  residual graph's reverse cap
 		if route, flow = g.dfsFlowCorrection(flow, startID, endID); len(route) != 0 {
 			slices.Reverse(route)
 		}
@@ -33,12 +31,11 @@ func (g *Graph) dfs(flow int, current, end int) ([]parsers.StationName, int) {
 	// if the start and end are same the path is found return the path slice and the flow count
 	if current == end {
 		return []parsers.StationName{g.VertexIDMap[current]}, flow
-		// return flow
 	}
 
-	// g.EdgeBook is used to book keep the current edge of the parent
+	// g.EdgeBook is used to book keep the current edges of the parent
 	// if we have parent A connected to 1000,
-	// if we already check 998 we dont want to go throung the whole neighbors again and  edge book should give you the id to the 999 edge
+	// if we already check 998 we dont want to go throung the whole neighbors list again and edge book should give you the id to the 999 edge
 	for i := g.EdgeBook[current]; i < len(g.EKGraph[current]); i++ { // loop around the neighbor of the current vertex
 		g.EdgeBook[current] = i
 		e := &g.EKGraph[current][i]
@@ -88,15 +85,13 @@ func (g *Graph) dfsFlowCorrection(flow int, current, end int) ([]parsers.Station
 		if !e.Real {
 			continue
 		}
-		// alse check the level of the current agains the neighbors to prevent a loop around
 		if rev.Cap > 0 { // it checks if the neighbor's reverse edge (b-c reverse edge = c-b) has a remaining cap
 			minCp := flow
 			if rev.Cap < minCp {
 				minCp = rev.Cap
 			}
 			path, flowReturn := g.dfsFlowCorrection(int(minCp), e.To, end) // call the dfs again this time the neighbor vertex as the source
-
-			if flowReturn > 0 { // if path found in the previous update the cap
+			if flowReturn > 0 {                                            // if path found in the previous update the cap
 				e.Cap += flowReturn                                               // we reset the e.cap backto its original capacity
 				g.EKGraph[e.To][e.Rev].Cap -= flowReturn                          // we reset the e.reverse.cap backto its original capacity
 				if len(path) > 0 && path[len(path)-1] == g.VertexIDMap[current] { // skip for the split node

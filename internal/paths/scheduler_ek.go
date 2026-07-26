@@ -102,7 +102,7 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) (pathAssignmen
 		// Find path with shortest # turns
 		for pathID, path := range pathSet {
 			numTurns := getNumTurns(pathID, path, pathAssignments)
-			if numTurns < shortestTurnNum {
+			if numTurns < shortestTurnNum || (numTurns == shortestTurnNum && len(pathAssignments[pathID]) < len(pathAssignments[shortestPathIndex])) {
 				shortestTurnNum = numTurns
 				shortestPathIndex = pathID
 			}
