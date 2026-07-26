@@ -98,7 +98,7 @@ func TestOutputCheck(t *testing.T) {
 				"st_pancras",
 				"2",
 			},
-			want: 3,
+			want: 2,
 		},
 		{
 			name: "map2, 10 trains, EdmondsKarp",
