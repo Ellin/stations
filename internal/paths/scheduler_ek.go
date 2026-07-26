@@ -5,6 +5,7 @@ package paths
 import (
 	"fmt"
 	"pathinder/internal/parsers"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -16,7 +17,7 @@ type Train struct {
 	CurrentStationName  parsers.StationName // e.g. "waterloo"
 }
 
-func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int) error {
+func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int) (int, error) {
 
 	var pathSet [][]parsers.StationName
 	var err error
@@ -24,23 +25,25 @@ func (g *Graph) RunScheduler(start, end, alg parsers.StationName, numTrains int)
 	switch alg {
 	case "EdmondsKarp":
 		if pathSet, err = g.findPathSet(start, end, numTrains); err != nil {
-			return err
+			return 0, err
 		}
 	case "Dinic":
 		if pathSet, err = g.DinicAlg(start, end, numTrains); err != nil {
-			return err
+			return 0, err
 		}
+		slices.SortFunc(pathSet, func(a, b []parsers.StationName) int {
+			return len(a) - len(b)
+		})
 	}
 	pathAssignments := divideTrains(numTrains, pathSet)
 	turnSchedule := runTrains(end, pathSet, pathAssignments)
 	printSchedule(turnSchedule)
 	fmt.Println("Trains scheduled successfully!")
 	fmt.Printf("%d turns to move %d trains from %s to %s using the path set of %d non-overlapping paths:\n%v\n\n", len(turnSchedule), numTrains, start, end, len(pathSet), pathSet)
-	return nil
+	return len(turnSchedule), nil
 }
 
-
-// findPathSet first runs the Edmonds Karp algorithm to find multiple sets of non-overlapping paths. 
+// findPathSet first runs the Edmonds Karp algorithm to find multiple sets of non-overlapping paths.
 // From the set of path sets, it returns the path set with the lowest average number of turns per path.
 // In this way, the cost (# of turns) is taken into account, as by itself, Edmonds Karp is only concerned about maximum flow.
 // Without taking into account the cost, choosing a path set only based on higher flow (more non-overlapping paths, possibly much longer) may result in
@@ -99,7 +102,7 @@ func divideTrains(numTrains int, pathSet [][]parsers.StationName) (pathAssignmen
 		// Find path with shortest # turns
 		for pathID, path := range pathSet {
 			numTurns := getNumTurns(pathID, path, pathAssignments)
-			if numTurns < shortestTurnNum {
+			if numTurns < shortestTurnNum || (numTurns == shortestTurnNum && len(pathAssignments[pathID]) < len(pathAssignments[shortestPathIndex])) {
 				shortestTurnNum = numTurns
 				shortestPathIndex = pathID
 			}

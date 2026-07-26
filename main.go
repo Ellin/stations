@@ -42,12 +42,12 @@ func main() {
 
 	// Start timer for pathfinding and scheduling
 	start := time.Now()
-	schedulerErr := graph.RunScheduler(arg.StartStation, arg.EndStation, arg.Algo, arg.TrainCount)
+	_, schedulerErr := graph.RunScheduler(arg.StartStation, arg.EndStation, arg.Algo, arg.TrainCount)
 	close(schedulerErr)
 
 	// Print algorithm results and performance
 	fmt.Println("Algorithm used:", arg.Algo)
-	fmt.Printf(green + "Execution Time: %v\n" + reset, time.Since(start))
+	fmt.Printf(green+"Execution Time: %v\n"+reset, time.Since(start))
 }
 
 // close exits program with exit code 1 if argument err is not nil
