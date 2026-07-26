@@ -69,8 +69,9 @@ func canTravel(version string, edge Edge, from VertexID, usedMap map[VertexID]ma
 // traceAugmentedPath follows the path from the sink up to the source using the parents map
 // The residual capacities of the used edges in the augmented path are updated
 // Returns a list of nodes in the path from start to sink
-func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) []VertexID {
+func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) ([]VertexID, bool) {
 	path := []VertexID{end}
+	isPreviousBlocking := false
 
 	parent, ok := parents[end]
 	for ok {
@@ -80,13 +81,18 @@ func (g *Graph) traceAugmentedPath(parents map[VertexID]Parent, end VertexID) []
 		forward.Cap--
 		reverse.Cap++
 
+		// Check if reverse edge was used -> if yes, previous augmented path found was blocking and the current augmented path will result finding more than 1 different "real path"
+		if !forward.Real {
+			isPreviousBlocking = true
+		}
+
 		path = append(path, parent.ID)
 		parent, ok = parents[parent.ID]
 	}
 
 	slices.Reverse(path)
 
-	return path
+	return path, isPreviousBlocking
 }
 
 func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxFlow int, stationPaths [][][]parsers.StationName) {
@@ -95,30 +101,43 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxF
 
 	var augmentingPaths [][]VertexID
 	var realPaths [][][]VertexID
+	var currentPathSet [][]VertexID // non-overlapping paths
 
 	for found {
 		// Update the residual capacities by tracing the augmented path
 		// No need to find minimal residual capacity bottleneck for updating the maxFlow as it will always be 1 in our case
-		augmentingPaths = append(augmentingPaths, g.traceAugmentedPath(parents, endID))
+		augmentingPath, isPreviousBlocking := g.traceAugmentedPath(parents, endID)
+		augmentingPaths = append(augmentingPaths,augmentingPath)
 		maxFlow++
 
-		// Find REAL paths without any reverse edges
-		// Run BFS maxFlow amount of times as we know maxFlow == # of non-overlapping paths that can be found
-		usedMap := make(map[VertexID]map[VertexID]struct{})
-		var foundPath []VertexID
-		var flowPathSet [][]VertexID
-		for i := maxFlow; i > 0; i-- {
-			parents_real, _ := g.Bfs("real", startID, endID, usedMap)
-			foundPath = g.traceRealPath(parents_real, usedMap, startID, endID)
-			flowPathSet = append(flowPathSet, foundPath)
-		}
-		realPaths = append(realPaths, flowPathSet)
+		if isPreviousBlocking {
+			realPaths = append(realPaths, currentPathSet)
 
+			// Find REAL paths without any reverse edges
+			// Run BFS maxFlow amount of times as we know maxFlow == # of non-overlapping paths that can be found
+			usedMap := make(map[VertexID]map[VertexID]struct{})
+			var foundPath []VertexID
+			var flowPathSet [][]VertexID
+			for i := maxFlow; i > 0; i-- {
+				parents_real, _ := g.Bfs("real", startID, endID, usedMap)
+				foundPath = g.traceRealPath(parents_real, usedMap, startID, endID)
+				flowPathSet = append(flowPathSet, foundPath)
+			}
+			
+			currentPathSet = flowPathSet
+		} else {
+			currentPathSet = append(currentPathSet, augmentingPath)
+		}
+		
 		parents, found = g.Bfs("aug", startID, endID, nil)
 
 		if maxFlow >= numTrains {
 			break
 		}
+	}
+
+	if len(currentPathSet) > 0 {
+		realPaths = append(realPaths, currentPathSet)
 	}
 
 	g.printEdmondsKarpResults(maxFlow, augmentingPaths, realPaths)
