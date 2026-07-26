@@ -50,6 +50,133 @@ func TestOutputCheck(t *testing.T) {
 			want: 3,
 		},
 		{
+			name: "Bond_Square, 4 trains, EdmondsKarp",
+			args: []string{
+				"../network/bond_square.map",
+				"bond_square",
+				"space_port",
+				"4",
+			},
+			want: 6,
+		},
+		{
+			name: "Bond_Square, 4 trains, Dinic",
+			args: []string{
+				"-alg", "Dinic",
+				"../network/bond_square.map",
+				"bond_square",
+				"space_port",
+				"4",
+			},
+			want: 6,
+		},
+		{
+			name: "Jungle-Desert, 10 trains, EdmondsKarp",
+			args: []string{
+				"../network/jungle_desert.map",
+				"jungle",
+				"desert",
+				"10",
+			},
+			want: 8,
+		},
+		{
+			name: "Jungle-Desert, 10 trains, Dinic",
+			args: []string{
+				"-alg", "Dinic",
+				"../network/jungle_desert.map",
+				"jungle",
+				"desert",
+				"10",
+			},
+			want: 8,
+		},
+		{
+			name: "Beginning-Terminus, 20 trains, EdmondsKarp",
+			args: []string{
+				"../network/beginning_terminus.map",
+				"beginning",
+				"terminus",
+				"20",
+			},
+			want: 11,
+		},
+		{
+			name: "Beginning-Terminus, 20 trains, Dinic",
+			args: []string{
+				"-alg", "Dinic",
+				"../network/beginning_terminus.map",
+				"beginning",
+				"terminus",
+				"20",
+			},
+			want: 11,
+		},
+		{
+			name: "Two-Four, 4 trains, EdmondsKarp",
+			args: []string{
+				"../network/two_four.map",
+				"two",
+				"four",
+				"4",
+			},
+			want: 6,
+		},
+		{
+			name: "Two-Four, 4 trains, Dinic",
+			args: []string{
+				"-alg", "Dinic",
+				"../network/two_four.map",
+				"two",
+				"four",
+				"4",
+			},
+			want: 6,
+		},
+		{
+			name: "Beethoven-Part, 9 trains, EdmondsKarp",
+			args: []string{
+				"-alg", "Dinic",
+				"../network/beethoven_part.map",
+				"beethoven",
+				"part",
+				"9",
+			},
+			want: 6,
+		},
+		{
+			name: "Beethoven-Part, 9 trains, Dinic",
+			args: []string{
+				"-alg", "Dinic",
+				"../network/beethoven_part.map",
+				"beethoven",
+				"part",
+				"9",
+			},
+			want: 6,
+		},
+		{
+			name: "Small-Large, 9 trains, EdmondsKarp",
+			args: []string{
+				"../network/small_large.map",
+				"small",
+				"large",
+				"9",
+			},
+			want: 8,
+		},
+		{
+			name: "Small-Large, 9 trains, Dinic",
+			args: []string{
+				"-alg", "Dinic",
+				"../network/small_large.map",
+				"small",
+				"large",
+				"9",
+			},
+			want: 8,
+		},
+		{
 			name: "Single long path, 1 train",
 			args: []string{
 				"../network/onepath.map",
