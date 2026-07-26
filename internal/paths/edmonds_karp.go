@@ -5,6 +5,7 @@ import (
 	"log"
 	"pathinder/internal/parsers"
 	"slices"
+	"strings"
 )
 
 type VertexID = int
@@ -174,24 +175,34 @@ func (g *Graph) printEdmondsKarpResults(maxFlow int, augmentingPaths [][]VertexI
 	g.printPaths(augmentingPaths)
 
 	fmt.Println("!REAL PATHS:")
-	for i, paths := range realPaths {
-		fmt.Printf("Flow %v:\n", i+1)
+	for _, paths := range realPaths {
+		fmt.Printf("Flow %v:\n", len(paths))
 		g.printPaths(paths)
 	}
 }
 
 func (g *Graph) printPaths(paths [][]VertexID) {
-	for _, path := range paths {
+	var builder strings.Builder
+
+	for i, path := range paths {
 		var prevStation string
-		for _, id := range path {
-			station := g.VertexIDMap[id]
+		fmt.Fprintf(&builder, "%v. ", i+1)
+		
+		station := g.VertexIDMap[0]
+		builder.WriteString(station)
+
+		for j := 1; j < len(path); j++ {
+			vertexID := path[j]
+			station := g.VertexIDMap[vertexID]
 			if prevStation != station { // Collapse split nodes
-				fmt.Print(station, "->")
+				builder.WriteString("->")
+				builder.WriteString(station)
 				prevStation = station
 			}
 		}
-		fmt.Println()
+		builder.WriteString("\n")
 	}
+	fmt.Println(builder.String())
 }
 
 // isUsed checks if an edge has already been used during real path finding
