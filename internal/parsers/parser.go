@@ -84,12 +84,6 @@ func ParseStations(lines []string, lineNum int) (map[StationName]model.Station, 
 	for i, line := range lines {
 		var lineHasError bool
 
-		// line, _, _ = strings.Cut(line, "#") // Remove comments
-
-		// if strings.TrimSpace(line) == "" {
-		// 	continue
-		// }
-
 		parts := trimSpaceSlice(strings.Split(line, ","))
 
 		if len(parts) != 3 { // Skip malformed station data
@@ -149,11 +143,6 @@ func ParseConnections(lines []string, lineNum int, stationMap map[StationName]mo
 	var errs []error
 
 	for i, line := range lines {
-		// line, _, _ := strings.Cut(line, "#") // Remove comments
-
-		// if strings.TrimSpace(line) == "" {
-		// 	continue
-		// }
 
 		parts := trimSpaceSlice(strings.Split(line, "-"))
 
