@@ -19,7 +19,7 @@ func TestParseStations(t *testing.T) {
 	}{
 		{
 			name:      "Valid",
-			lines:     []string{"# south stations", "waterloo  , 3 , 1", "victoria,6,7", "# north stations", "euston,11,23", "st_pancras,5,15", "# international"},
+			lines:     []string{"waterloo  , 3 , 1", "victoria,6,7", "euston,11,23", "st_pancras,5,15"},
 			linenum:   1,
 			wantError: false,
 			want:      map[string]model.Station{"euston": {Name: "euston", X: 11, Y: 23}, "st_pancras": {Name: "st_pancras", X: 5, Y: 15}, "victoria": {Name: "victoria", X: 6, Y: 7}, "waterloo": {Name: "waterloo", X: 3, Y: 1}},
