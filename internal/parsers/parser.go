@@ -23,7 +23,14 @@ func ParseNetworkMap(text string) (model.NetworkData, error) {
 	var connectionsLineNum int     // the line number in the text at which the "connections:" section starts
 
 	for i, line := range lines {
+
 		line = strings.TrimSpace(line)
+
+		line, _, _ = strings.Cut(line, "#") // Remove comments from each line
+
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 
 		if line == "stations:" {
 			parsingSection = "stations"
@@ -77,11 +84,11 @@ func ParseStations(lines []string, lineNum int) (map[StationName]model.Station, 
 	for i, line := range lines {
 		var lineHasError bool
 
-		line, _, _ = strings.Cut(line, "#") // Remove comments
+		// line, _, _ = strings.Cut(line, "#") // Remove comments
 
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
+		// if strings.TrimSpace(line) == "" {
+		// 	continue
+		// }
 
 		parts := trimSpaceSlice(strings.Split(line, ","))
 
@@ -142,11 +149,11 @@ func ParseConnections(lines []string, lineNum int, stationMap map[StationName]mo
 	var errs []error
 
 	for i, line := range lines {
-		line, _, _ := strings.Cut(line, "#") // Remove comments
+		// line, _, _ := strings.Cut(line, "#") // Remove comments
 
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
+		// if strings.TrimSpace(line) == "" {
+		// 	continue
+		// }
 
 		parts := trimSpaceSlice(strings.Split(line, "-"))
 

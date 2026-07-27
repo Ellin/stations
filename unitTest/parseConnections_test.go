@@ -18,7 +18,7 @@ func TestParseConnections(t *testing.T) {
 	}{
 		{
 			name:           "Valid Connection",
-			lines:          []string{"# south stations", "waterloo  , 3 , 1", "victoria,6,7", "# north stations", "euston,11,23", "st_pancras,5,15", "# international"},
+			lines:          []string{"waterloo  , 3 , 1", "victoria,6,7", "euston,11,23", "st_pancras,5,15"},
 			ConnectionLine: []string{"waterloo-victoria", "waterloo-euston", "st_pancras-euston", "victoria-st_pancras"},
 			linenum:        11,
 			wantError:      false,
@@ -26,7 +26,7 @@ func TestParseConnections(t *testing.T) {
 		},
 		{
 			name:           "Malformed Connection Format",
-			lines:          []string{"# south stations", "waterloo  , 3 , 1", "victoria,6,7", "# north stations", "euston,11,23", "st_pancras,5,15", "# international"},
+			lines:          []string{"waterloo  , 3 , 1", "victoria,6,7", "euston,11,23", "st_pancras,5,15"},
 			ConnectionLine: []string{"waterloo-victoria", "waterloo-euston", "st_pancraseuston", "victoria-st_pancras"},
 			linenum:        11,
 			wantError:      true,
@@ -34,7 +34,7 @@ func TestParseConnections(t *testing.T) {
 		},
 		{
 			name:           "Malformed Station Names",
-			lines:          []string{"# south stations", "waterloo  , 3 , 1", "victoria,6,7", "# north stations", "euston,11,23", "st_pancras,5,15", "# international"},
+			lines:          []string{"waterloo  , 3 , 1", "victoria,6,7", "euston,11,23", "st_pancras,5,15"},
 			ConnectionLine: []string{"waterloo-victoria", "&waterloo-euston", "st_pancras-euston", "victoria-st_pancras"},
 			linenum:        11,
 			wantError:      true,
@@ -42,7 +42,7 @@ func TestParseConnections(t *testing.T) {
 		},
 		{
 			name:           "Non Existent Start Station",
-			lines:          []string{"# south stations", "waterloo  , 3 , 1", "victoria,6,7", "# north stations", "euston,11,23", "st_pancras,5,15", "# international"},
+			lines:          []string{"waterloo  , 3 , 1", "victoria,6,7", "euston,11,23", "st_pancras,5,15"},
 			ConnectionLine: []string{"moon-victoria", "waterloo-euston", "st_pancras-euston", "victoria-st_pancras"},
 			linenum:        11,
 			wantError:      true,
@@ -50,7 +50,7 @@ func TestParseConnections(t *testing.T) {
 		},
 		{
 			name:           "Non Existent End Station",
-			lines:          []string{"# south stations", "waterloo  , 3 , 1", "victoria,6,7", "# north stations", "euston,11,23", "st_pancras,5,15", "# international"},
+			lines:          []string{"waterloo  , 3 , 1", "victoria,6,7", "euston,11,23", "st_pancras,5,15"},
 			ConnectionLine: []string{"waterloo-moon", "waterloo-euston", "st_pancras-euston", "victoria-st_pancras"},
 			linenum:        11,
 			wantError:      true,
@@ -58,7 +58,7 @@ func TestParseConnections(t *testing.T) {
 		},
 		{
 			name:           "Same Start End Station Connection",
-			lines:          []string{"# south stations", "waterloo  , 3 , 1", "victoria,6,7", "# north stations", "euston,11,23", "st_pancras,5,15", "# international"},
+			lines:          []string{"waterloo  , 3 , 1", "victoria,6,7", "euston,11,23", "st_pancras,5,15"},
 			ConnectionLine: []string{"waterloo-waterloo", "waterloo-euston", "st_pancras-euston", "victoria-st_pancras"},
 			linenum:        11,
 			wantError:      true,
