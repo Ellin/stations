@@ -84,17 +84,22 @@ func ParseStations(lines []string, lineNum int) (map[StationName]model.Station, 
 	for i, line := range lines {
 		var lineHasError bool
 
+		if err := checkErrorLimit(errs, 10); err != nil {
+			errs = append(errs, err)
+			return nil, errors.Join(errs...)
+		}
+
 		parts := trimSpaceSlice(strings.Split(line, ","))
 
 		if len(parts) != 3 { // Skip malformed station data
-			errs = append(errs, fmt.Errorf("Malformed station format on line #%d: %s\n", lineNum+i+1, line))
+			errs = append(errs, fmt.Errorf("Error: Malformed station format on line #%d: %s\n", lineNum+i+1, line))
 			continue
 		}
 
 		name, x, y := parts[0], parts[1], parts[2]
 
 		if !validateStationName(name) {
-			errs = append(errs, fmt.Errorf("Invalid station name in line #%d: %v\n", lineNum+i+1, name))
+			errs = append(errs, fmt.Errorf("Error: Invalid station name in line #%d: %v. Station names must contain only lower-case letters, numbers and underscores.\n", lineNum+i+1, name))
 			lineHasError = true
 		}
 
@@ -102,14 +107,14 @@ func ParseStations(lines []string, lineNum int) (map[StationName]model.Station, 
 		yInt, isYValid := validateCoordinate(y)
 
 		if !isXValid || !isYValid {
-			errs = append(errs, fmt.Errorf("Invalid coordinates at station %s in line #%d: %v, %v\n", name, lineNum+i+1, x, y))
+			errs = append(errs, fmt.Errorf("Error: Invalid coordinates at station %s in line #%d: %v, %v. Coordinates must be non-negative integers.\n", name, lineNum+i+1, x, y))
 			continue
 		}
 
 		// Check for duplicate coordinates
 		var coordinates string = x + "," + y
 		if _, ok := seenCoordinates[coordinates]; ok {
-			errs = append(errs, fmt.Errorf("Duplicate coordinates in line #%d: %s\n", lineNum+i+1, coordinates))
+			errs = append(errs, fmt.Errorf("Error: Duplicate coordinates in line #%d: %s\n", lineNum+i+1, coordinates))
 			continue
 		}
 		seenCoordinates[coordinates] = struct{}{}
@@ -117,12 +122,12 @@ func ParseStations(lines []string, lineNum int) (map[StationName]model.Station, 
 		if !lineHasError {
 			_, ok := stationMap[name]
 			if ok {
-				errs = append(errs, fmt.Errorf("Duplicate station name %s in line #%d\n", name, lineNum+i+1))
+				errs = append(errs, fmt.Errorf("Error: Duplicate station name %s in line #%d\n", name, lineNum+i+1))
 				continue
 			}
 
 			if len(stationMap) >= 10000 {
-				errs = append(errs, fmt.Errorf("Too many stations in network map. Maximum limit is 10k stations.\n"))
+				errs = append(errs, fmt.Errorf("Error: Too many stations in network map. Maximum limit is 10k stations.\n"))
 				return nil, errors.Join(errs...)
 			}
 			stationMap[name] = model.Station{Name: name, X: xInt, Y: yInt}
@@ -143,18 +148,22 @@ func ParseConnections(lines []string, lineNum int, stationMap map[StationName]mo
 	var errs []error
 
 	for i, line := range lines {
+		if err := checkErrorLimit(errs, 10); err != nil {
+			errs = append(errs, err)
+			return nil, errors.Join(errs...)
+		}
 
 		parts := trimSpaceSlice(strings.Split(line, "-"))
 
 		if len(parts) != 2 {
-			errs = append(errs, fmt.Errorf("Malformed connection format in line #%d: %s\n", lineNum+i+1, line))
+			errs = append(errs, fmt.Errorf("Error: Malformed connection format in line #%d: %s\n", lineNum+i+1, line))
 			continue
 		}
 
 		start, end := parts[0], parts[1]
 
 		if !validateStationName(start) || !validateStationName(end) {
-			errs = append(errs, fmt.Errorf("Malformed station names in line #%d: %s\n", lineNum+i+1, line))
+			errs = append(errs, fmt.Errorf("Error: Invalid station name in line #%d: %v. Station names must contain only lower-case letters, numbers and underscores.\n", lineNum+i+1, line))
 			continue
 		}
 
@@ -163,10 +172,10 @@ func ParseConnections(lines []string, lineNum int, stationMap map[StationName]mo
 		_, endExists := stationMap[end]
 		if !startExists || !endExists {
 			if !startExists {
-				errs = append(errs, fmt.Errorf("Non-existent start station in line #%d: %s\n", lineNum+i+1, start))
+				errs = append(errs, fmt.Errorf("Error: Non-existent start station in line #%d: %s\n", lineNum+i+1, start))
 			}
 			if !endExists {
-				errs = append(errs, fmt.Errorf("Non-existent end station in line #%d: %s\n", lineNum+i+1, end))
+				errs = append(errs, fmt.Errorf("Error: Non-existent end station in line #%d: %s\n", lineNum+i+1, end))
 			}
 			continue
 		}
@@ -210,4 +219,12 @@ func trimSpaceSlice(s []string) []string {
 		trimmed = append(trimmed, v)
 	}
 	return trimmed
+}
+
+// checkErrorLimit returns an error if too many errors have been found
+func checkErrorLimit(errs []error, limit int) error {
+	if len(errs) > limit {
+		return fmt.Errorf("Error: Too many errors.\n")
+	}
+	return nil
 }
