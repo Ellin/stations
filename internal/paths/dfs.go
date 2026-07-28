@@ -1,7 +1,7 @@
 package paths
 
 import (
-	"pathinder/internal/parsers"
+	"pathfinder/internal/parsers"
 	"slices"
 )
 

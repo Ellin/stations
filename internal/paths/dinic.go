@@ -2,7 +2,7 @@ package paths
 
 import (
 	"errors"
-	"pathinder/model"
+	"pathfinder/model"
 )
 
 func (g *Graph) DinicAlg(start, end string, numTrains int) ([][]model.StationName, error) {
@@ -46,18 +46,21 @@ exit:
 
 	// if the maxflow is equal to the train number and the max flow was found on the first level graph with only augmenting path
 	//  there is no need for flow correction and we can skip this part and use the path found in the dfs
-	if layercount > 1 {
-		FlowCorrectedPaths := make([][]model.StationName, 0, max_flow)
-		for range max_flow {
-			foundFlow, path := g.DFSAlg(true, start, end)
-			if foundFlow == 0 {
-				break
-			}
-			FlowCorrectedPaths = append(FlowCorrectedPaths, path)
+	// if layercount > 1 {
 
+	FlowCorrectedPaths := make([][]model.StationName, 0, max_flow)
+
+	for range max_flow {
+		foundFlow, path := g.DFSAlg(true, start, end)
+		if foundFlow == 0 {
+			break
 		}
-		optionsList = append(optionsList, FlowCorrectedPaths)
-	} else if layercount == 1 {
+		FlowCorrectedPaths = append(FlowCorrectedPaths, path)
+
+	}
+	optionsList = append(optionsList, FlowCorrectedPaths)
+
+	if layercount == 1 {
 		return pathList, nil
 	}
 

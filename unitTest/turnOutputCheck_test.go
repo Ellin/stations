@@ -3,8 +3,8 @@ package unitTest
 import (
 	"flag"
 	"os"
-	"pathinder/internal/parsers"
-	"pathinder/internal/paths"
+	"pathfinder/internal/parsers"
+	"pathfinder/internal/paths"
 	"testing"
 )
 

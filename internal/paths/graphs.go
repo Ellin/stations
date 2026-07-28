@@ -2,7 +2,7 @@ package paths
 
 import (
 	"fmt"
-	"pathinder/model"
+	"pathfinder/model"
 )
 
 type StationName = string
@@ -31,7 +31,7 @@ func (g *Graph) CreateVertexMaps(nd model.NetworkData) {
 	g.VertexNameMap = make(map[StationName]int) // maps station names with V_in ID. V_out ID == V_in ID + 1.
 
 	var i int
-	for station, _ := range nd.NetworkMap {
+	for station := range nd.NetworkMap {
 		g.VertexIDMap[i] = station
 		g.VertexNameMap[station] = i
 

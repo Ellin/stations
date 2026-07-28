@@ -3,7 +3,7 @@ package paths
 import (
 	"fmt"
 	"log"
-	"pathinder/internal/parsers"
+	"pathfinder/internal/parsers"
 	"slices"
 	"strings"
 )
@@ -108,11 +108,11 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxF
 		// Update the residual capacities by tracing the augmented path
 		// No need to find minimal residual capacity bottleneck for updating the maxFlow as it will always be 1 in our case
 		augmentingPath, isPreviousBlocking := g.traceAugmentedPath(parents, endID)
-		augmentingPaths = append(augmentingPaths,augmentingPath)
+		augmentingPaths = append(augmentingPaths, augmentingPath)
 		maxFlow++
 
 		// Run BFS for extracting real paths only if the newest augmenting path found contains a reverse edge (meaning a path in the previous path set blocked flow and would not be found in the new path set with more flow)
-		// Otherwise, the augmenting path is a real path that doesn't overlap with any other paths in the current path set. 
+		// Otherwise, the augmenting path is a real path that doesn't overlap with any other paths in the current path set.
 		if isPreviousBlocking {
 			realPaths = append(realPaths, currentPathSet)
 
@@ -126,12 +126,12 @@ func (g *Graph) EdmondsKarp(start, end parsers.StationName, numTrains int) (maxF
 				foundPath = g.traceRealPath(parents_real, usedMap, startID, endID)
 				realPathSet = append(realPathSet, foundPath)
 			}
-			
+
 			currentPathSet = realPathSet
 		} else {
 			currentPathSet = append(currentPathSet, augmentingPath)
 		}
-		
+
 		parents, found = g.Bfs("aug", startID, endID, nil)
 
 		if maxFlow >= numTrains {
@@ -189,7 +189,7 @@ func (g *Graph) printPaths(paths [][]VertexID) {
 	for i, path := range paths {
 		var prevStation string
 		fmt.Fprintf(&builder, "%v. ", i+1)
-		
+
 		station := g.VertexIDMap[0]
 		builder.WriteString(station)
 

@@ -3,9 +3,7 @@ package parsers
 import (
 	"errors"
 	"fmt"
-	"pathinder/model"
-
-	// "fmt"
+	"pathfinder/model"
 	"strings"
 )
 

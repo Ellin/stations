@@ -2,8 +2,8 @@ package unitTest
 
 import (
 	"fmt"
-	"pathinder/internal/parsers"
-	"pathinder/model"
+	"pathfinder/internal/parsers"
+	"pathfinder/model"
 	"reflect"
 	"strconv"
 	"strings"

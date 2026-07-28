@@ -4,7 +4,7 @@ package paths
 
 import (
 	"fmt"
-	"pathinder/internal/parsers"
+	"pathfinder/internal/parsers"
 	"slices"
 	"strconv"
 	"strings"
