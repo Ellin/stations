@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"pathinder/internal/parsers"
+	"pathfinder/internal/parsers"
 	"testing"
 )
 

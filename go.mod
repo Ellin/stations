@@ -1,3 +1,3 @@
-module pathinder
+module pathfinder
 
 go 1.25.0

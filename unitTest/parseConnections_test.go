@@ -1,7 +1,7 @@
 package unitTest
 
 import (
-	"pathinder/internal/parsers"
+	"pathfinder/internal/parsers"
 	"reflect"
 	"testing"
 )

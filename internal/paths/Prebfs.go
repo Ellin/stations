@@ -2,8 +2,8 @@ package paths
 
 import (
 	"container/list"
-	"pathinder/internal/parsers"
-	"pathinder/model"
+	"pathfinder/internal/parsers"
+	"pathfinder/model"
 	"slices"
 )
 

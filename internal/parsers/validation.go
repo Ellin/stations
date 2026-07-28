@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"pathinder/model"
+	"pathfinder/model"
 	"strconv"
 	"unicode"
 )

@@ -2,8 +2,8 @@ package unitTest
 
 import (
 	"maps"
-	"pathinder/internal/parsers"
-	"pathinder/model"
+	"pathfinder/internal/parsers"
+	"pathfinder/model"
 	"testing"
 )
 

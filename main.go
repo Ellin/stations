@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"pathinder/internal/parsers"
-	"pathinder/internal/paths"
+	"pathfinder/internal/parsers"
+	"pathfinder/internal/paths"
 	"time"
 )
 

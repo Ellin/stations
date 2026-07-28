@@ -4,7 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"pathinder/model"
+	"pathfinder/model"
 	"strings"
 )
 
@@ -51,8 +51,8 @@ func ParseArgs() (*model.ArgsInfo, error) {
 	}
 
 	if TrainNumber > 150000 {
-	 	return nil, fmt.Errorf("Error: Invalid Train Numbers %s The Train Number Exceeded The Maximum Number Of Permitted Trains 150000.\n", args[3])
-	 }
+		return nil, fmt.Errorf("Error: Invalid Train Numbers %s The Train Number Exceeded The Maximum Number Of Permitted Trains 150000.\n", args[3])
+	}
 	if TrainNumber == 0 {
 		return nil, nil
 	}
